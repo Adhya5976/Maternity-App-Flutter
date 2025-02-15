@@ -5,6 +5,6 @@ class ManageProducts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Text('This is product Page');
   }
 }

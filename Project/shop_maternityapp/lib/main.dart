@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shop_maternityapp/Landingpage.dart';
-import 'package:shop_maternityapp/landingtest.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
