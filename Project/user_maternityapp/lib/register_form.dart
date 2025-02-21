@@ -40,7 +40,7 @@ class RegisterForm extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
+     ),
+);
+}
 }
