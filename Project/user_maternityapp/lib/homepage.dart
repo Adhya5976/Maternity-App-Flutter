@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _buildCountdownCard(),
               const SizedBox(height: 30),
-              _buildFeatureGrid(),
+              _buildFeatureRow(),
             ],
           ),
         ),
@@ -90,24 +90,23 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureGrid() {
-    return Expanded(
-      child: GridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 20,
-        crossAxisSpacing: 20,
-        children: [
-          _buildFeatureCard(Icons.fitness_center, 'Exercise'),
-          _buildFeatureCard(Icons.restaurant_menu, 'Diet Plans'),
-          _buildFeatureCard(Icons.monitor_weight, 'Weight Tracker'),
-          _buildFeatureCard(Icons.local_hospital, 'Doctor Appointments'),
-        ],
-      ),
+  Widget _buildFeatureRow() {
+    return Column(
+      children: [
+        _buildFeatureCard(Icons.fitness_center, 'Exercise'),
+        const SizedBox(height: 15),
+        _buildFeatureCard(Icons.restaurant_menu, 'Diet Plans'),
+        const SizedBox(height: 15),
+        _buildFeatureCard(Icons.monitor_weight, 'Weight Tracker'),
+        const SizedBox(height: 15),
+        _buildFeatureCard(Icons.local_hospital, 'Doctor Appointments'),
+      ],
     );
   }
 
   Widget _buildFeatureCard(IconData icon, String title) {
     return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -119,23 +118,25 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
           CircleAvatar(
-            radius: 30,
+            radius: 25,
             backgroundColor: Colors.blue.shade100,
             child: Icon(icon, color: Colors.blue, size: 30),
           ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+          const SizedBox(width: 15),
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
             ),
           ),
+          const Icon(Icons.arrow_forward_ios, color: Colors.black45, size: 20),
         ],
       ),
     );
