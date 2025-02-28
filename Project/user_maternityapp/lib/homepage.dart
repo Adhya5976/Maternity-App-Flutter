@@ -114,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 15),
         _buildFeatureCard(Icons.restaurant_menu, 'Diet Plans',DietPlanScreen(),context),
         const SizedBox(height: 15),
-        _buildFeatureCard(Icons.monitor_weight, 'Weight Tracker',Weighttracker(),context),
+        _buildFeatureCard(Icons.monitor_weight, 'Weight Tracker',WeightTrackingPage(),context),
         const SizedBox(height: 15),
         _buildFeatureCard(Icons.shopping_bag, 'Shopping',ShoppingPage(),context),
         const SizedBox(height: 15),
