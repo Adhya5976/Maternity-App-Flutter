@@ -1,8 +1,13 @@
 import 'package:admin_maternityapp/screen/category.dart';
 import 'package:admin_maternityapp/screen/dashboard.dart';
 import 'package:admin_maternityapp/screen/district.dart';
+import 'package:admin_maternityapp/screen/manage_dietplan.dart';
+import 'package:admin_maternityapp/screen/manage_exercise.dart';
+import 'package:admin_maternityapp/screen/new_shops.dart';
 import 'package:admin_maternityapp/screen/place.dart';
+import 'package:admin_maternityapp/screen/rejected_shops.dart';
 import 'package:admin_maternityapp/screen/subcategory.dart';
+import 'package:admin_maternityapp/screen/verified_shops.dart';
 import 'package:flutter/material.dart';
 
 class Homepage extends StatefulWidget {
@@ -21,6 +26,11 @@ class _HomepageState extends State<Homepage> {
     'Category',
     'Place',
     'Sub Category',
+    'Exercises',
+    'Diet Plan',
+    'New Shops',
+    'Verified Shops',
+    'Rejected Shops',
   ];
   List<IconData> pageIcon = [
     Icons.dashboard_outlined,
@@ -28,9 +38,25 @@ class _HomepageState extends State<Homepage> {
     Icons.category_outlined,
     Icons.location_city,
     Icons.category_outlined,
+    Icons.fitness_center_outlined,
+    Icons.fastfood_outlined,
+    Icons.store_outlined,
+    Icons.store_mall_directory_outlined,
+    Icons.store_outlined,
   ];
 
-  List<Widget> pages = [Dashboard(), ManageDistrict(),ManageCategory(),ManagePlace(),ManageSubCategory()];  
+  List<Widget> pages = [
+    Dashboard(),
+    ManageDistrict(),
+    ManageCategory(),
+    ManagePlace(),
+    ManageSubCategory(),
+    ManageExercise(),
+    ManageDietplan(),
+    NewShops(),
+    VerifiedShops(),
+    RejectedShop(),
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,14 +69,14 @@ class _HomepageState extends State<Homepage> {
           Expanded(
               flex: 1,
               child: Container(
-                color:Color.fromARGB(255, 255, 154, 154),
+                color: Color.fromARGB(255, 255, 154, 154),
                 child: ListView.builder(
                   itemCount: pageName.length,
                   itemBuilder: (context, index) {
                     return ListTile(
                       onTap: () {
                         setState(() {
-                          selectedIndex=index;
+                          selectedIndex = index;
                         });
                       },
                       leading: Icon(pageIcon[index]),
@@ -63,7 +89,11 @@ class _HomepageState extends State<Homepage> {
               flex: 4,
               child: Container(
                 color: const Color.fromARGB(255, 255, 254, 254),
-                child: pages[selectedIndex],
+                child: ListView(
+                  children: [
+                    pages[selectedIndex],
+                  ],
+                ),
               )),
         ],
       ),

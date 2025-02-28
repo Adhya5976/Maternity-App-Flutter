@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:user_maternityapp/addpost.dart';
+import 'package:user_maternityapp/dietplan.dart';
+import 'package:user_maternityapp/exercise.dart';
+import 'package:user_maternityapp/profilepage.dart';
+import 'package:user_maternityapp/shopping.dart';
+import 'package:user_maternityapp/weighttracker.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,11 +25,11 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: 20),
               _buildCountdownCard(),
               const SizedBox(height: 30),
-              _buildFeatureRow(),
+              _buildFeatureRow(context),
             ],
           ),
         ),
@@ -26,7 +37,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -38,10 +49,15 @@ class HomeScreen extends StatelessWidget {
             color: Colors.black87,
           ),
         ),
-        CircleAvatar(
-          radius: 25,
-          backgroundColor: Colors.blue.shade200,
-          child: Icon(Icons.person, color: Colors.white, size: 28),
+        GestureDetector(
+          onTap: () {
+             Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+          },
+          child: CircleAvatar(
+            radius: 25,
+            backgroundColor: Colors.blue.shade200,
+            child: Icon(Icons.person, color: Colors.white, size: 28),
+          ),
         ),
       ],
     );
@@ -90,55 +106,65 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureRow() {
+  Widget _buildFeatureRow(BuildContext context) {
     return Column(
       children: [
-        _buildFeatureCard(Icons.fitness_center, 'Exercise'),
+        GestureDetector(
+          child: _buildFeatureCard(Icons.fitness_center, 'Exercise',ExerciseScreen(),context),),
         const SizedBox(height: 15),
-        _buildFeatureCard(Icons.restaurant_menu, 'Diet Plans'),
+        _buildFeatureCard(Icons.restaurant_menu, 'Diet Plans',DietPlanScreen(),context),
         const SizedBox(height: 15),
-        _buildFeatureCard(Icons.monitor_weight, 'Weight Tracker'),
+        _buildFeatureCard(Icons.monitor_weight, 'Weight Tracker',Weighttracker(),context),
         const SizedBox(height: 15),
-        _buildFeatureCard(Icons.local_hospital, 'Doctor Appointments'),
+        _buildFeatureCard(Icons.shopping_bag, 'Shopping',ShoppingPage(),context),
+        const SizedBox(height: 15),
+        _buildFeatureCard(Icons.add_a_photo_sharp, 'Post',CreatePost(),context),
       ],
     );
   }
 
-  Widget _buildFeatureCard(IconData icon, String title) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: Colors.blue.shade100,
-            child: Icon(icon, color: Colors.blue, size: 30),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
+  Widget _buildFeatureCard(IconData icon, String title, Widget page, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push( context, MaterialPageRoute(builder: (context) => page));
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 5,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.blue.shade100,
+              child: Icon(icon, color: Colors.blue, size: 30),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
               ),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios, color: Colors.black45, size: 20),
-        ],
+            const Icon(Icons.arrow_forward_ios, color: Colors.black45, size: 20),
+          ],
+        ),
       ),
     );
   }
 }
+
+
