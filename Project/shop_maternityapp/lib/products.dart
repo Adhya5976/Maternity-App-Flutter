@@ -62,7 +62,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
   List<Map<String, dynamic>> get _filteredProducts {
     return _products.where((product) {
       final matchesSearch =
-          product['name'].toLowerCase().contains(_searchQuery.toLowerCase());
+          product['product_name'].toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesCategory = _selectedCategory == 'All' ||
           product['category'] == _selectedCategory;
       return matchesSearch && matchesCategory;
@@ -279,13 +279,10 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                image: DecorationImage(
-                  image: AssetImage(product['image']),
-                  fit: BoxFit.cover,
-                ),
               ),
               child: Stack(
                 children: [
+                  Image.network(product['product_image']),
                   Positioned(
                     top: 10,
                     right: 10,
@@ -309,7 +306,6 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
               ),
             ),
           ),
-
           // Product Details
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -317,7 +313,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product['name'],
+                  product['product_name'],
                   style: GoogleFonts.sanchez(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -331,7 +327,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '\$${product['price'].toStringAsFixed(2)}',
+                      '\$${product['product_price'].toStringAsFixed(2)}',
                       style: GoogleFonts.sanchez(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -339,7 +335,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                       ),
                     ),
                     Text(
-                      'Stock: ${product['stock']}',
+                      'Stock: ',
                       style: GoogleFonts.sanchez(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -353,7 +349,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          _showEditProductDialog(context, product);
+                          // _showEditProductDialog(context, product);
                         },
                         icon: Icon(Icons.edit, size: 16),
                         label: Text("Edit"),
@@ -368,7 +364,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          _showDeleteConfirmation(context, product);
+                          // _showDeleteConfirmation(context, product);
                         },
                         icon: Icon(Icons.delete, size: 16),
                         label: Text("Delete"),
