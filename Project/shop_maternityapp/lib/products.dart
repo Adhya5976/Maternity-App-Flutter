@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shop_maternityapp/main.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path; // Import path package
 
 class ProductManagementPage extends StatefulWidget {
   const ProductManagementPage({super.key});
@@ -9,6 +14,47 @@ class ProductManagementPage extends StatefulWidget {
 }
 
 class _ProductManagementPageState extends State<ProductManagementPage> {
+  final nameController = TextEditingController();
+  final descController = TextEditingController();
+  final priceController = TextEditingController();
+  final imageController = TextEditingController();
+
+  PlatformFile? pickedImage;
+
+  // Handle File Upload Process
+  Future<void> handleImagePick() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: false, // Only single file upload
+    );
+    if (result != null) {
+      setState(() {
+        pickedImage = result.files.first;
+        imageController.text = result.files.first.name;
+      });
+    }
+  }
+
+  Future<String?> photoUpload() async {
+    try {
+      final bucketName = 'product'; // Replace with your bucket name
+      String formattedDate =
+          DateFormat('dd-MM-yyyy-HH-mm').format(DateTime.now());
+      final filePath = "$formattedDate-${pickedImage!.name}";
+      await supabase.storage.from(bucketName).uploadBinary(
+            filePath,
+            pickedImage!.bytes!, // Use file.bytes for Flutter Web
+          );
+      final publicUrl =
+          supabase.storage.from(bucketName).getPublicUrl(filePath);
+      // await updateImage(uid, publicUrl);
+      return publicUrl;
+    } catch (e) {
+      print("Error photo upload: $e");
+      return null;
+    }
+  }
+
+
   final List<Map<String, dynamic>> _products = [
     {
       'id': '1',
@@ -51,18 +97,71 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
       'image': 'Assets/product5.jpg',
     },
   ];
-  
+
   String _searchQuery = '';
   String _selectedCategory = 'All';
-  
+
   List<Map<String, dynamic>> get _filteredProducts {
     return _products.where((product) {
-      final matchesSearch = product['name'].toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategory == 'All' || product['category'] == _selectedCategory;
+      final matchesSearch =
+          product['name'].toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory = _selectedCategory == 'All' ||
+          product['category'] == _selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
   }
+
+  List<Map<String, dynamic>> category = [];
+  String? selectedCategory;
+
+  String? selectedSUbcat;
+
+  Future<void> insert() async {
+    try {
+      String? url = await photoUpload();
+      await supabase.from("tbl_product").insert({
+        'product_name': nameController.text,
+        'subcategory_id': selectedSUbcat,
+        'product_description': descController.text,
+        'product_price': priceController.text,
+        'product_image': url,
+      });
+
   
+
+      nameController.clear();
+      descController.clear();
+      priceController.clear();
+      imageController.clear();
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Product Inserted")));
+      Navigator.pop(context);
+    } catch (e) {
+      print("Error Inserting Product");
+    }
+  }
+
+  Future<void> fetchCat() async {
+    try {
+      final response = await supabase.from("tbl_category").select();
+      setState(() {
+        category = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      print("Error fetching Category: $e");
+    }
+  }
+
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchCat();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,7 +201,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
               ],
             ),
             SizedBox(height: 20),
-            
+
             // Search and Filter
             Row(
               children: [
@@ -133,7 +232,13 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedCategory,
-                      items: ['All', 'Clothing', 'Accessories', 'Nutrition', 'Care']
+                      items: [
+                        'All',
+                        'Clothing',
+                        'Accessories',
+                        'Nutrition',
+                        'Care'
+                      ]
                           .map((category) => DropdownMenuItem(
                                 value: category,
                                 child: Text(category),
@@ -151,7 +256,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
               ],
             ),
             SizedBox(height: 20),
-            
+
             // Products Grid
             Expanded(
               child: _filteredProducts.isEmpty
@@ -166,7 +271,8 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                     )
                   : GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: MediaQuery.of(context).size.width > 1200 ? 4 : 3,
+                        crossAxisCount:
+                            MediaQuery.of(context).size.width > 1200 ? 4 : 3,
                         childAspectRatio: 0.8,
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
@@ -183,7 +289,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
       ),
     );
   }
-  
+
   Widget _buildProductCard(Map<String, dynamic> product) {
     return Container(
       decoration: BoxDecoration(
@@ -236,7 +342,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
               ),
             ),
           ),
-          
+
           // Product Details
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -315,158 +421,209 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
       ),
     );
   }
-  
+
   void _showAddProductDialog(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    final _nameController = TextEditingController();
-    final _priceController = TextEditingController();
-    final _stockController = TextEditingController();
-    String _category = 'Clothing';
-    
+    final formKey = GlobalKey<FormState>();
+    List<Map<String, dynamic>> subcat = [];
+
+    Future<void> fetchSubcat(String id, Function setState) async {
+      try {
+        final response = await supabase
+            .from("tbl_subcategory")
+            .select()
+            .eq('category_id', id);
+        print(response);
+        setState(() {
+          subcat = response;
+        });
+      } catch (e) {
+        print("Error fetching Subcategories: $e");
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Add New Product"),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: "Product Name",
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter product name';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 15),
-                DropdownButtonFormField<String>(
-                  value: _category,
-                  decoration: InputDecoration(
-                    labelText: "Category",
-                    border: OutlineInputBorder(),
-                  ),
-                  items: ['Clothing', 'Accessories', 'Nutrition', 'Care']
-                      .map((category) => DropdownMenuItem(
-                            value: category,
-                            child: Text(category),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    _category = value!;
-                  },
-                ),
-                SizedBox(height: 15),
-                TextFormField(
-                  controller: _priceController,
-                  decoration: InputDecoration(
-                    labelText: "Price (\$)",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter price';
-                    }
-                    if (double.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 15),
-                TextFormField(
-                  controller: _stockController,
-                  decoration: InputDecoration(
-                    labelText: "Stock",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter stock quantity';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 15),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Image upload logic would go here
-                  },
-                  icon: Icon(Icons.upload),
-                  label: Text("Upload Image"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.black87,
-                  ),
-                ),
-              ],
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    /// Product Name Field
+                    TextFormField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: "Product Name",
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter product name';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 15),
+
+                    /// Product Description Field
+                    TextFormField(
+                      controller: descController,
+                      decoration: InputDecoration(
+                        labelText: "Product Description",
+                        border: OutlineInputBorder(),
+                      ),
+                      minLines: 1,
+                      maxLines: null,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter product description';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 15),
+
+                    /// Product Price Field
+                    TextFormField(
+                      controller: priceController,
+                      decoration: InputDecoration(
+                        labelText: "Price (\$)",
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter price';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'Please enter a valid number';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 15),
+
+                    /// Category Dropdown
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      hint: Text("Select Category"),
+                      items: category.map((data) {
+                        return DropdownMenuItem<String>(
+                          value: data['id'].toString(),
+                          child: Text(data['category_name']),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedCategory = newValue;
+                          selectedSUbcat = null; // Reset subcategory
+                          subcat.clear(); // Clear previous subcategories
+                        });
+                        fetchSubcat(newValue!, setState);
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 15),
+
+                    /// Subcategory Dropdown
+                    DropdownButtonFormField<String>(
+                      value: selectedSUbcat,
+                      hint: Text("Select Subcategory"),
+                      items: subcat.map((data) {
+                        return DropdownMenuItem<String>(
+                          value: data['id'].toString(),
+                          child: Text(data['subcategory_name']),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedSUbcat = newValue;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Subcategory',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 15),
+
+                    /// Image Picker Field
+                    TextFormField(
+                      onTap: handleImagePick,
+                      controller: imageController,
+                      decoration: InputDecoration(
+                        labelText: "Image",
+                        border: OutlineInputBorder(),
+                      ),
+                      readOnly: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select an image';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 15),
+                  ],
+                );
+              },
             ),
           ),
         ),
         actions: [
+          /// Cancel Button
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text("Cancel"),
           ),
+
+          /// Add Product Button
           ElevatedButton(
             onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                // Add product logic would go here
-                setState(() {
-                  _products.add({
-                    'id': (_products.length + 1).toString(),
-                    'name': _nameController.text,
-                    'category': _category,
-                    'price': double.parse(_priceController.text),
-                    'stock': int.parse(_stockController.text),
-                    'image': 'Assets/product1.jpg', // Default image
-                  });
-                });
-                Navigator.pop(context);
+              if (formKey.currentState!.validate()) {
+                insert(); // Insert logic
               }
             },
-            child: Text("Add Product"),
             style: ElevatedButton.styleFrom(
               backgroundColor: Color.fromARGB(255, 198, 176, 249),
               foregroundColor: Colors.white,
             ),
+            child: Text("Add Product"),
           ),
         ],
       ),
     );
   }
-  
-  void _showEditProductDialog(BuildContext context, Map<String, dynamic> product) {
-    final _formKey = GlobalKey<FormState>();
-    final _nameController = TextEditingController(text: product['name']);
-    final _priceController = TextEditingController(text: product['price'].toString());
-    final _stockController = TextEditingController(text: product['stock'].toString());
-    String _category = product['category'];
-    
+
+  void _showEditProductDialog(
+      BuildContext context, Map<String, dynamic> product) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: product['name']);
+    final priceController =
+        TextEditingController(text: product['price'].toString());
+    final stockController =
+        TextEditingController(text: product['stock'].toString());
+    String category = product['category'];
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Edit Product"),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  controller: _nameController,
+                  controller: nameController,
                   decoration: InputDecoration(
                     labelText: "Product Name",
                     border: OutlineInputBorder(),
@@ -480,7 +637,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                 ),
                 SizedBox(height: 15),
                 DropdownButtonFormField<String>(
-                  value: _category,
+                  value: category,
                   decoration: InputDecoration(
                     labelText: "Category",
                     border: OutlineInputBorder(),
@@ -492,12 +649,12 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                           ))
                       .toList(),
                   onChanged: (value) {
-                    _category = value!;
+                    category = value!;
                   },
                 ),
                 SizedBox(height: 15),
                 TextFormField(
-                  controller: _priceController,
+                  controller: priceController,
                   decoration: InputDecoration(
                     labelText: "Price (\$)",
                     border: OutlineInputBorder(),
@@ -515,7 +672,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                 ),
                 SizedBox(height: 15),
                 TextFormField(
-                  controller: _stockController,
+                  controller: stockController,
                   decoration: InputDecoration(
                     labelText: "Stock",
                     border: OutlineInputBorder(),
@@ -554,17 +711,18 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (_formKey.currentState!.validate()) {
+              if (formKey.currentState!.validate()) {
                 // Update product logic would go here
                 setState(() {
-                  final index = _products.indexWhere((p) => p['id'] == product['id']);
+                  final index =
+                      _products.indexWhere((p) => p['id'] == product['id']);
                   if (index != -1) {
                     _products[index] = {
                       'id': product['id'],
-                      'name': _nameController.text,
-                      'category': _category,
-                      'price': double.parse(_priceController.text),
-                      'stock': int.parse(_stockController.text),
+                      'name': nameController.text,
+                      'category': category,
+                      'price': double.parse(priceController.text),
+                      'stock': int.parse(stockController.text),
                       'image': product['image'],
                     };
                   }
@@ -582,8 +740,9 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
       ),
     );
   }
-  
-  void _showDeleteConfirmation(BuildContext context, Map<String, dynamic> product) {
+
+  void _showDeleteConfirmation(
+      BuildContext context, Map<String, dynamic> product) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

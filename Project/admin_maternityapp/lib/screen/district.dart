@@ -10,31 +10,32 @@ class ManageDistrict extends StatefulWidget {
 
 class _ManageDistrictState extends State<ManageDistrict> {
   final TextEditingController _districtController = TextEditingController();
-
+  List<Map<String, dynamic>> districts = [];
+  int eid = 0;
 
   Future<void> insert() async {
     try {
       await supabase.from("tbl_district").insert({
-        'district_name':_districtController.text,
+        'district_name': _districtController.text,
       });
       _districtController.clear();
       fetchData();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Inserted")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("District Added Successfully")),
+      );
     } catch (e) {
-      print("Error Inserting District");
+      print("Error Inserting District: $e");
     }
   }
-
-  List<Map<String,dynamic>> districts = [];
 
   Future<void> fetchData() async {
     try {
       final response = await supabase.from("tbl_district").select();
       setState(() {
-        districts=response;
+        districts = response;
       });
     } catch (e) {
-      print("Error fetching District: $e");
+      print("Error fetching Districts: $e");
     }
   }
 
@@ -47,88 +48,120 @@ class _ManageDistrictState extends State<ManageDistrict> {
     }
   }
 
+  Future<void> update() async {
+    try {
+      await supabase.from('tbl_district').update({
+        'district_name': _districtController.text,
+      }).eq('district_id', eid);
+      fetchData();
+      _districtController.clear();
+      setState(() {
+        eid = 0;
+      });
+    } catch (e) {
+      print("Error updating data: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     fetchData();
   }
 
-int eid = 0;
-Future<void> update()async{
-  try {
-    await supabase.from('tbl_district').update({
-      'district_name' :_districtController.text,
-  }).eq('district_id', eid);
-  fetchData();
-  _districtController.clear();
-  setState(() {
-    eid=0;
-  });
-  } catch (e) {
-   print("Error updating data: $e" );
-  }
-}
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _districtController,
-                keyboardType: TextInputType.name,
-                style: TextStyle(color: const Color.fromARGB(255, 8, 8, 8)),
-                decoration: InputDecoration(
-                  hintText: "Enter District",
-                  hintStyle: TextStyle(color: const Color.fromARGB(255, 18, 18, 18)),
-                  border: OutlineInputBorder(),
-                ),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            color: Color.fromARGB(255, 194, 170, 250),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _districtController,
+                      keyboardType: TextInputType.name,
+                      decoration: InputDecoration(
+                        hintText: "Enter District",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      eid == 0 ? insert() : update();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 182, 152, 251),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    ),
+                    child: Text(
+                      eid == 0 ? "Add" : "Update",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: Colors.white),
+                      
+                    ),
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(onPressed: () {
-              if(eid==0){
-              insert();
-            }
-            else{
-              update();
-            }
-            },
-            child :Text("Submit")),
-          ],
-        ),
-        ListView.builder(
-          itemCount: districts.length,
-          shrinkWrap: true,
-          itemBuilder: (context, index) {
-          final data = districts[index];
-          return ListTile(
-            leading: Text((index + 1).toString()),
-            title: Text(data['district_name']),
-            trailing: SizedBox(
-              width: 80,
-child: Row(
- children: [
-                    IconButton(onPressed: (){
-                      setState(() {
-                        eid=data['district_id'];
-                        _districtController.text=data['district_name'];
-                      });
-                    }, icon: Icon(Icons.edit)),
-                    IconButton(onPressed: (){
-                      delete(data['district_id']);
-                       },
-                                 icon: Icon(Icons.delete)),
-                  ],
-                ),
-              ),
-            );
-          }
-    
-        )
-      ]
-      );
-          }
-      
-  }   
-  
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: districts.length,
+              itemBuilder: (context, index) {
+                final data = districts[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Color.fromARGB(255, 194, 170, 250),
+                      child: Text((index + 1).toString(),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                    title: Text(
+                      data['district_name'],
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              eid = data['district_id'];
+                              _districtController.text = data['district_name'];
+                            });
+                          },
+                          icon: const Icon(Icons.edit, color: Color.fromARGB(255, 160, 141, 247)),
+                        ),
+                        IconButton(
+                          onPressed: () => delete(data['district_id']),
+                          icon: const Icon(Icons.delete_outline_rounded, color: Color.fromARGB(255, 160, 141, 247)
+                        ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
