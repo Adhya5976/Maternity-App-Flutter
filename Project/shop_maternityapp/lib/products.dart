@@ -54,49 +54,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
     }
   }
 
-
-  final List<Map<String, dynamic>> _products = [
-    {
-      'id': '1',
-      'name': 'Maternity Dress - Floral',
-      'category': 'Clothing',
-      'price': 79.99,
-      'stock': 15,
-      'image': 'Assets/product1.jpg',
-    },
-    {
-      'id': '2',
-      'name': 'Pregnancy Support Belt',
-      'category': 'Accessories',
-      'price': 45.50,
-      'stock': 23,
-      'image': 'Assets/product2.jpg',
-    },
-    {
-      'id': '3',
-      'name': 'Prenatal Vitamins',
-      'category': 'Nutrition',
-      'price': 29.99,
-      'stock': 42,
-      'image': 'Assets/product3.jpg',
-    },
-    {
-      'id': '4',
-      'name': 'Maternity Leggings',
-      'category': 'Clothing',
-      'price': 34.99,
-      'stock': 18,
-      'image': 'Assets/product4.jpg',
-    },
-    {
-      'id': '5',
-      'name': 'Stretch Mark Cream',
-      'category': 'Care',
-      'price': 22.50,
-      'stock': 30,
-      'image': 'Assets/product5.jpg',
-    },
-  ];
+  List<Map<String, dynamic>> _products = [];
 
   String _searchQuery = '';
   String _selectedCategory = 'All';
@@ -116,6 +74,18 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
 
   String? selectedSUbcat;
 
+  Future<void> fetchProduct() async {
+    try {
+      final response = await supabase.from('tbl_product').select();
+      setState(() {
+        _products = response;
+      });
+    } catch (e) {
+      print('Error fetching product: $e');
+      setState(() {});
+    }
+  }
+
   Future<void> insert() async {
     try {
       String? url = await photoUpload();
@@ -126,8 +96,6 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
         'product_price': priceController.text,
         'product_image': url,
       });
-
-  
 
       nameController.clear();
       descController.clear();
@@ -153,13 +121,12 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
     }
   }
 
-
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchCat();
+    fetchProduct();
   }
 
   @override
@@ -329,7 +296,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        product['category'],
+                        "",
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
