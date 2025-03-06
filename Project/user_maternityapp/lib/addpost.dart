@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
-import 'package:user_maternityapp/homepage.dart';
-import 'package:user_maternityapp/main.dart'; // Import path package
+import 'package:user_maternityapp/main.dart';
 
 class CreatePost extends StatefulWidget {
   const CreatePost({super.key});
@@ -13,34 +12,62 @@ class CreatePost extends StatefulWidget {
   State<CreatePost> createState() => _CreatePostState();
 }
 
-final TextEditingController _titleController = TextEditingController();
-
 class _CreatePostState extends State<CreatePost> {
   File? _image;
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController _contentController = TextEditingController();
+  bool isSubmitting = false;
+  String? errorMessage;
+  bool _showImageOptions = false;
 
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
+  @override
+  void dispose() {
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 80,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _image = File(pickedFile.path);
+          _showImageOptions = false;
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image. Please try again.')),
+      );
     }
+  }
+
+  void _showImageSourceOptions() {
+    setState(() {
+      _showImageOptions = true;
+    });
   }
 
   Future<String?> _uploadImage() async {
     try {
+      if (_image == null) return null;
+
       // Get current date and time
       String formattedDate =
-          DateFormat('dd-MM-yyyy-HH-mm').format(DateTime.now());
+          DateFormat('dd-MM-yyyy-HH-mm-ss').format(DateTime.now());
 
-      // Extract file extension from _image!
-      String fileExtension =
-          path.extension(_image!.path); // Example: .jpg, .png
+      // Extract file extension
+      String fileExtension = path.extension(_image!.path);
 
       // Generate filename with extension
-      String fileName = 'Recipe-$formattedDate$fileExtension';
+      String fileName = 'post-$formattedDate$fileExtension';
 
+      // Upload image
       await supabase.storage.from('Post').upload(fileName, _image!);
 
       // Get public URL of the uploaded image
@@ -48,114 +75,318 @@ class _CreatePostState extends State<CreatePost> {
       return imageUrl;
     } catch (e) {
       print('Image upload failed: $e');
-      return null;
+      throw e; // Rethrow to handle in calling function
     }
   }
 
-  Future<void> insertPost() async {
-    try {
-      String title = _titleController.text;
-      
-      String? url = await _uploadImage();
-      await supabase.from('tbl_post').insert({
-        'post_content': title,
-        'post_file': url
+  Future<void> _createPost() async {
+    // Validate input
+    if (_contentController.text.trim().isEmpty && _image == null) {
+      setState(() {
+        errorMessage = 'Please add some text or an image to your post';
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          "POST ADDED SUCCESSFULLY!!",
-          style: TextStyle(color: Colors.white),
+      return;
+    }
+
+    setState(() {
+      isSubmitting = true;
+      errorMessage = null;
+    });
+
+    try {
+      String? imageUrl;
+
+      // Upload image if selected
+      if (_image != null) {
+        imageUrl = await _uploadImage();
+      }
+
+      // Insert post
+      await supabase.from('tbl_post').insert({
+        'post_content': _contentController.text.trim(),
+        'post_file': imageUrl,
+        'post_datetime': DateTime.now().toIso8601String(),
+        'user_id': supabase.auth.currentUser!.id,
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Post created successfully!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
         ),
-        backgroundColor: Colors.green,
-      ));
-      Navigator.push(context,
-                   MaterialPageRoute(
-                       builder: (context) => const HomeScreen()),
-                 );
-                    
+      );
+
+      // Navigate back
+      Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          "Failed. Please Try Again!!",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red,
-      ));
-      print("ERROR ADDING : $e");
+      setState(() {
+        isSubmitting = false;
+        errorMessage = 'Failed to create post. Please try again.';
+      });
+      print("Error creating post: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    appBar: AppBar(
-      title: Text('Create Post'),
-      backgroundColor: Colors.blueAccent,
-      centerTitle: true,
-    ),
-    body: SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.blue[700],
+        title: Text(
+          'Create Post',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: isSubmitting ? null : _createPost,
+            child: isSubmitting
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.blue[400],
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Post',
+                    style: TextStyle(
+                      color: Colors.blue[400],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          if (_showImageOptions) {
+            setState(() {
+              _showImageOptions = false;
+            });
+          }
+        },
+        child: Stack(
           children: [
-            // Image Upload Placeholder
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 300,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(8),
-                  image: _image != null
-                      ? DecorationImage(
-                          image: FileImage(_image!), fit: BoxFit.cover)
-                      : null,
-                ),
-                child: _image == null
-                    ? const Center(child: Text("Add Image"))
-                    : null, // Remove text when an image is selected
-              ),
-            ),
-            const SizedBox(height: 20),
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // User info
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.blue[100],
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Share with the community',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              'Your post will be visible to all members',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
 
-            // Recipe Title
-            TextFormField(
-              maxLines: 3,
-              controller: _titleController,
-              decoration: InputDecoration(
-              
-                labelText: "Post Title",
-                border: OutlineInputBorder(),
+                    SizedBox(height: 20),
+
+                    // Post content
+                    TextField(
+                      controller: _contentController,
+                      decoration: InputDecoration(
+                        hintText: "What's on your mind?",
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 18,
+                        ),
+                      ),
+                      maxLines: 10,
+                      minLines: 3,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    // Image preview
+                    if (_image != null)
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              _image!,
+                              width: double.infinity,
+                              height: 300,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _image = null;
+                                });
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    // Error message
+                    if (errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red[400],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+
+                    SizedBox(height: 100), // Space for bottom actions
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 20),
-            
-            // Add Step Button
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(
-                      255, 213, 85, 1), // Change this to any color you want
-                  foregroundColor:
-                      const Color.fromARGB(255, 0, 0, 0), // Text color
-                  minimumSize: const Size(200, 50), // Width: 200, Height: 50
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                        8), // Rectangular shape with slight rounding
+
+            // Bottom actions
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: Offset(0, -1),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Add to your post:',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    IconButton(
+                      icon: Icon(
+                        Icons.photo,
+                        color: Colors.green[600],
+                        size: 28,
+                      ),
+                      onPressed: _showImageSourceOptions,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Image source options
+            if (_showImageOptions)
+              Positioned(
+                bottom: 70,
+                left: 16,
+                child: Container(
+                  width: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.photo_library,
+                            color: Colors.purple[400]),
+                        title: Text('Gallery'),
+                        onTap: () => _pickImage(ImageSource.gallery),
+                      ),
+                      Divider(height: 1),
+                      ListTile(
+                        leading:
+                            Icon(Icons.camera_alt, color: Colors.blue[400]),
+                        title: Text('Camera'),
+                        onTap: () => _pickImage(ImageSource.camera),
+                      ),
+                    ],
                   ),
                 ),
-                onPressed: () {
-                 insertPost();
-                },
-                child: const Text("NEXT"),
               ),
-            ),
           ],
         ),
-     ),
-    )
+      ),
     );
-}
+  }
 }

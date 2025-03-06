@@ -4,7 +4,8 @@ import 'package:shop_maternityapp/main.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as path; // Import path package
+import 'package:path/path.dart' as path;
+import 'package:shop_maternityapp/product_details.dart'; // Import path package
 
 class ProductManagementPage extends StatefulWidget {
   const ProductManagementPage({super.key});
@@ -57,15 +58,13 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
   List<Map<String, dynamic>> _products = [];
 
   String _searchQuery = '';
-  String _selectedCategory = 'All';
 
   List<Map<String, dynamic>> get _filteredProducts {
     return _products.where((product) {
-      final matchesSearch =
-          product['product_name'].toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategory == 'All' ||
-          product['category'] == _selectedCategory;
-      return matchesSearch && matchesCategory;
+      final matchesSearch = product['product_name']
+          .toLowerCase()
+          .contains(_searchQuery.toLowerCase());
+      return matchesSearch;
     }).toList();
   }
 
@@ -76,7 +75,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
 
   Future<void> fetchProduct() async {
     try {
-      final response = await supabase.from('tbl_product').select();
+      final response = await supabase.from('tbl_product').select("*, tbl_subcategory(*,tbl_category(*))");
       setState(() {
         _products = response;
       });
@@ -123,7 +122,6 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     fetchCat();
     fetchProduct();
@@ -189,37 +187,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                     ),
                   ),
                 ),
-                SizedBox(width: 20),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedCategory,
-                      items: [
-                        'All',
-                        'Clothing',
-                        'Accessories',
-                        'Nutrition',
-                        'Care'
-                      ]
-                          .map((category) => DropdownMenuItem(
-                                value: category,
-                                child: Text(category),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCategory = value!;
-                        });
-                      },
-                      hint: Text("Category"),
-                    ),
-                  ),
-                ),
+                
               ],
             ),
             SizedBox(height: 20),
@@ -258,129 +226,96 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: Offset(0, 3),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsPage(product: product),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                  image: DecorationImage(image: NetworkImage(product['product_image']),fit: BoxFit.cover),
+                ),
               ),
-              child: Stack(
+            ),
+            // Product Details
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.network(product['product_image']),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        "",
-                        style: TextStyle(
-                          fontSize: 12,
+                  Text(
+                    product['product_name'],
+                    style: GoogleFonts.sanchez(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '\$${product['product_price'].toStringAsFixed(2)}',
+                        style: GoogleFonts.sanchez(
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Color.fromARGB(255, 198, 176, 249),
                         ),
                       ),
+                      Text(
+                        'Stock: ',
+                        style: GoogleFonts.sanchez(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    
+                    onPressed: () {
+                      // _showDeleteConfirmation(context, product);
+                    },
+                    icon: Icon(Icons.delete, size: 16),
+                    label: Text("Delete"),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: BorderSide(color: Colors.red),
+                      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          // Product Details
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product['product_name'],
-                  style: GoogleFonts.sanchez(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '\$${product['product_price'].toStringAsFixed(2)}',
-                      style: GoogleFonts.sanchez(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 198, 176, 249),
-                      ),
-                    ),
-                    Text(
-                      'Stock: ',
-                      style: GoogleFonts.sanchez(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // _showEditProductDialog(context, product);
-                        },
-                        icon: Icon(Icons.edit, size: 16),
-                        label: Text("Edit"),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.blue,
-                          side: BorderSide(color: Colors.blue),
-                          padding: EdgeInsets.symmetric(vertical: 0),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // _showDeleteConfirmation(context, product);
-                        },
-                        icon: Icon(Icons.delete, size: 16),
-                        label: Text("Delete"),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: BorderSide(color: Colors.red),
-                          padding: EdgeInsets.symmetric(vertical: 0),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -559,145 +494,6 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
               foregroundColor: Colors.white,
             ),
             child: Text("Add Product"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditProductDialog(
-      BuildContext context, Map<String, dynamic> product) {
-    final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController(text: product['name']);
-    final priceController =
-        TextEditingController(text: product['price'].toString());
-    final stockController =
-        TextEditingController(text: product['stock'].toString());
-    String category = product['category'];
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Edit Product"),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: "Product Name",
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter product name';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 15),
-                DropdownButtonFormField<String>(
-                  value: category,
-                  decoration: InputDecoration(
-                    labelText: "Category",
-                    border: OutlineInputBorder(),
-                  ),
-                  items: ['Clothing', 'Accessories', 'Nutrition', 'Care']
-                      .map((category) => DropdownMenuItem(
-                            value: category,
-                            child: Text(category),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    category = value!;
-                  },
-                ),
-                SizedBox(height: 15),
-                TextFormField(
-                  controller: priceController,
-                  decoration: InputDecoration(
-                    labelText: "Price (\$)",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter price';
-                    }
-                    if (double.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 15),
-                TextFormField(
-                  controller: stockController,
-                  decoration: InputDecoration(
-                    labelText: "Stock",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter stock quantity';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 15),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Image upload logic would go here
-                  },
-                  icon: Icon(Icons.upload),
-                  label: Text("Change Image"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                // Update product logic would go here
-                setState(() {
-                  final index =
-                      _products.indexWhere((p) => p['id'] == product['id']);
-                  if (index != -1) {
-                    _products[index] = {
-                      'id': product['id'],
-                      'name': nameController.text,
-                      'category': category,
-                      'price': double.parse(priceController.text),
-                      'stock': int.parse(stockController.text),
-                      'image': product['image'],
-                    };
-                  }
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: Text("Save Changes"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 198, 176, 249),
-              foregroundColor: Colors.white,
-            ),
           ),
         ],
       ),
