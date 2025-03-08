@@ -10,6 +10,9 @@ class RejectedShop extends StatefulWidget {
 class _RejectedShopState extends State<RejectedShop> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Center(
+      child: Text("This page is for displaying rejected shops",style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)
+      )
+    );
   }
 }

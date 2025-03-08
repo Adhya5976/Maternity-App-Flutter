@@ -24,7 +24,7 @@ class _ManageDietplanState extends State<ManageDietplan> {
         'dietplan_breakfast': _breakfastController.text,
         'dietplan_lunch': _lunchController.text,
         'dietplan_dinner': _dinnerController.text,
-        'dietplan_month': _monthController.text,
+        'dietplan_month': selectedTrimester,
       });
       _titleController.clear();
       _descriptionController.clear();

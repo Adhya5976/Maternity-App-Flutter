@@ -10,6 +10,9 @@ class NewShops extends StatefulWidget {
 class _NewShopsState extends State<NewShops> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Center(
+      child: Text("This page is for displaying new shops",style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)
+      )
+    );
   }
 }

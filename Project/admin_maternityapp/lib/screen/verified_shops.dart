@@ -10,6 +10,9 @@ class VerifiedShops extends StatefulWidget {
 class _VerifiedShopsState extends State<VerifiedShops> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Center(
+      child: Text("This page is for displaying Verified shops",style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)
+      )
+    );
   }
 }

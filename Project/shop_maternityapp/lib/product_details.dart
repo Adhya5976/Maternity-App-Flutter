@@ -2,10 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_maternityapp/main.dart';
 
-class ProductDetailsPage extends StatelessWidget {
+class ProductDetailsPage extends StatefulWidget {
   final Map<String, dynamic> product;
 
   const ProductDetailsPage({super.key, required this.product});
+
+  @override
+  State<ProductDetailsPage> createState() => _ProductDetailsPageState();
+}
+
+class _ProductDetailsPageState extends State<ProductDetailsPage> {
+
+  List<Map<String, dynamic>> stock = [];
+
+  Future<void> fetchStock() async {
+    try {
+      final response = await supabase.from('tbl_stock').select().eq('product_id', widget.product['product_id']);
+      setState(() {
+        stock = response;
+      });
+    } catch (e) {
+      print('Error in stock fetch: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStock();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +44,7 @@ class ProductDetailsPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          product['product_name'],
+          widget.product['product_name'],
           style: GoogleFonts.sanchez(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -51,7 +76,7 @@ class ProductDetailsPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
-                      image: NetworkImage(product['product_image']),
+                      image: NetworkImage(widget.product['product_image']),
                       fit: BoxFit.cover,
                     ),
                     boxShadow: [
@@ -71,7 +96,7 @@ class ProductDetailsPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        product['product_name'],
+                        widget.product['product_name'],
                         style: GoogleFonts.sanchez(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -89,46 +114,41 @@ class ProductDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        product['product_description'],
+                        widget.product['product_description'],
                         style: GoogleFonts.sanchez(
                           fontSize: 16,
                           color: Colors.grey[700],
                         ),
                       ),
                       const SizedBox(height: 5),
-            _buildDetailRow("Category", product['tbl_subcategory']['tbl_category']['category_name'], Colors.blue),
+                      _buildDetailRow(
+                          "Category",
+                          widget.product['tbl_subcategory']['tbl_category']
+                              ['category_name'],
+                          Colors.blue),
                       const SizedBox(height: 5),
-            _buildDetailRow("Sub Category", product['tbl_subcategory']['subcategory_name'], Colors.green),
-
+                      _buildDetailRow(
+                          "Sub Category",
+                          widget.product['tbl_subcategory']['subcategory_name'],
+                          Colors.green),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-
-            // Stock Details
-            Text(
-              "Stock Details",
-              style: GoogleFonts.sanchez(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            
             // Action Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 Text(
-              "Stock Details",
-              style: GoogleFonts.sanchez(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
+                Text(
+                  "Stock Details",
+                  style: GoogleFonts.sanchez(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
                 ElevatedButton.icon(
                   onPressed: () {
                     _showRestockDialog(context);
@@ -138,16 +158,34 @@ class ProductDetailsPage extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 198, 176, 249),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-                
               ],
             ),
+            const SizedBox(height: 10),
 
+            stock.isNotEmpty ? DataTable(columns: [
+              DataColumn(label:  Text("Stock ID")),
+              DataColumn(label:  Text("Quantity")),
+              DataColumn(label:  Text("Date Added")),
+
+            ],
+             rows: stock.asMap().entries.map((entry) {
+              int index = entry.key + 1;
+              var stock = entry.value;
+              return DataRow(cells: [
+                DataCell(Text(index.toString())),
+                DataCell(Text(stock['stock_quantity'].toString())),
+                DataCell(Text(stock['stock_date'].toString().split('T')[0])),
+              ]);
+            }).toList(),
+            ) : Text('Stock not available')
+            
           ],
         ),
       ),
@@ -189,29 +227,25 @@ class ProductDetailsPage extends StatelessWidget {
     );
   }
 
-  
-
   // Restock Dialog with TextFormField
   void _showRestockDialog(BuildContext context) {
     final TextEditingController _quantityController = TextEditingController();
     final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-
     Future<void> updateStock() async {
-    try {
-      await supabase.from('tbl_stock').insert({
-        'product_id': product['product_id'],
-        'stock_quantity': _quantityController.text,
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Product restocked successfully")),
-      );
-      Navigator.pop(context); // Close dialog
-    } catch (e) {
-      print(e);
-      
+      try {
+        await supabase.from('tbl_stock').insert({
+          'product_id': widget.product['product_id'],
+          'stock_quantity': _quantityController.text,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Product restocked successfully")),
+        );
+        Navigator.pop(context); // Close dialog
+      } catch (e) {
+        print(e);
+      }
     }
-  }
 
     showDialog(
       context: context,
@@ -222,7 +256,8 @@ class ProductDetailsPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Enter the quantity to restock '${product['product_name']}'"),
+              Text(
+                  "Enter the quantity to restock '${widget.product['product_name']}'"),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _quantityController,
@@ -274,7 +309,8 @@ class ProductDetailsPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Delete Product"),
-        content: Text("Are you sure you want to delete '${product['product_name']}'?"),
+        content: Text(
+            "Are you sure you want to delete '${widget.product['product_name']}'?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

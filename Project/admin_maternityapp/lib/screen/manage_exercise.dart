@@ -26,13 +26,14 @@ class _ManageExerciseState extends State<ManageExercise> {
       await supabase.from("tbl_exercise").insert({
         'exercise_title': _exerciseController.text,
         'exercise_description': _descriptionController.text,
-        '1122': selectedTrimester,
+        'exercise_trimester': selectedTrimester,
         'exercise_file': url,
       });
       _exerciseController.clear();
       _descriptionController.clear();
       _weekController.clear();
       _fileController.clear();
+      selectedTrimester = null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Exercise Added Successfully!"),
@@ -159,7 +160,9 @@ class _ManageExerciseState extends State<ManageExercise> {
           // Submit Button
           Center(
             child: ElevatedButton(
-              onPressed: insert,
+              onPressed: (){
+                insert();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple.shade800,
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
