@@ -1,5 +1,10 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:shop_maternityapp/main.dart';
+import 'package:file_picker/file_picker.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -9,27 +14,113 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  File? _shopImage;
+  final picker = ImagePicker();
   List<Map<String, dynamic>> districts = [];
   String? selectedDistrict;
-   final TextEditingController _districtController = TextEditingController();
-final TextEditingController _nameController = TextEditingController();
-final TextEditingController _passwordController = TextEditingController();
-final TextEditingController _contactController = TextEditingController();
-final TextEditingController _emailController = TextEditingController();
-final TextEditingController _confirmpasswordController = TextEditingController();
+  final TextEditingController _districtController = TextEditingController();
+  final TextEditingController _placeController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _contactController = TextEditingController();
+  final TextEditingController _proofController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _confirmpasswordController =
+      TextEditingController();
 
+  final formkey = GlobalKey<FormState>();
 
-final formkey = GlobalKey<FormState>();
+  Uint8List? _imageBytes; // Used for Web
+
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      _imageBytes =
+          await pickedFile.readAsBytes(); // Convert to Uint8List for Web
+      setState(() {}); // Refresh UI
+    }
+  }
+
+  PlatformFile? pickedProof;
+
+  Future<void> handleProofPick() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: false, // Only single file upload
+    );
+    if (result != null) {
+      setState(() {
+        pickedProof = result.files.first;
+        _proofController.text = result.files.first.name;
+      });
+    }
+  }
+
+  Future<String?> uploadImage() async {
+    if (_imageBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select an image first!')),
+      );
+      return "";
+    }
+
+    try {
+      final String fileName =
+          'shop_photos/${DateTime.now().millisecondsSinceEpoch}.png';
+
+      // Upload the file to Supabase Storage (Bucket: "shop_photos")
+      await supabase.storage.from('shop').uploadBinary(
+            fileName,
+            _imageBytes!,
+          );
+
+      // Get the public URL of the uploaded image
+      final imageUrl =
+          supabase.storage.from('shop').getPublicUrl(fileName);
+
+      print('Image uploaded successfully: $imageUrl');
+      return imageUrl;
+    } catch (e) {
+      print('Upload Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload Failed!')),
+      );
+      return null;
+    }
+  }
+
+  Future<String?> proofUpload() async {
+    try {
+      final bucketName = 'shop'; // Replace with your bucket name
+      String formattedDate =
+          DateFormat('dd-MM-yyyy-HH-mm').format(DateTime.now());
+      final filePath = "$formattedDate-${pickedProof!.name}";
+      await supabase.storage.from(bucketName).uploadBinary(
+            filePath,
+            pickedProof!.bytes!, // Use file.bytes for Flutter Web
+          );
+      final publicUrl =
+          supabase.storage.from(bucketName).getPublicUrl(filePath);
+      // await updateImage(uid, publicUrl);
+      return publicUrl;
+    } catch (e) {
+      print("Error photo upload: $e");
+      return null;
+    }
+  }
 
   Future<void> register() async {
     try {
-      final authentication = await supabase.auth.signUp(password: _passwordController.text, email: _emailController.text);
+      final authentication = await supabase.auth.signUp(
+          password: _passwordController.text, email: _emailController.text);
       String uid = authentication.user!.id;
       insertShop(uid);
     } catch (e) {
       print("Error: $e");
-}
-}
+    }
+  }
 
   Future<void> fetchDistrict() async {
     try {
@@ -41,33 +132,49 @@ final formkey = GlobalKey<FormState>();
       print("Error fetching District: $e");
     }
   }
-   Future<void> insertShop(String uid) async {
+
+  Future<void> insertShop(String uid) async {
     try {
+      String? imageUrl = await uploadImage();
+      String? proofUrl = await proofUpload();
       await supabase.from("tbl_shop").insert({
-        'shop_name':_nameController.text,
-        'shop_password':_passwordController.text,
-        'shop_contact':_contactController.text,
-        'shop_email':_emailController.text,
-        'place_id':selectedPlace
+        'shop_name': _nameController.text,
+        'shop_password': _passwordController.text,
+        'shop_address': _addressController.text,
+        'shop_contact': _contactController.text,
+        'shop_email': _emailController.text,
+        'place_id': selectedPlace,
+        'shop_logo': imageUrl,
+        'shop_proof': proofUrl,
       });
       _nameController.clear();
       _passwordController.clear();
+      _addressController.clear();
+      _proofController.clear();
+      _districtController.clear();
+      _placeController.clear();
       _contactController.clear();
       _districtController.clear();
       _emailController.clear();
       _confirmpasswordController.clear();
-     
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Inserted")));
+      setState(() {
+        _shopImage = null;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Inserted")));
     } catch (e) {
       print("Error Inserting User: $e");
     }
   }
- List<Map<String, dynamic>> places = [];
+
+  List<Map<String, dynamic>> places = [];
   String? selectedPlace;
 
   Future<void> fetchPlace(String id) async {
     try {
-      final response = await supabase.from("tbl_place").select().eq('district_id', id);
+      final response =
+          await supabase.from("tbl_place").select().eq('district_id', id);
       setState(() {
         places = response;
       });
@@ -75,6 +182,7 @@ final formkey = GlobalKey<FormState>();
       print("Error fetching Places: $e");
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -108,7 +216,27 @@ final formkey = GlobalKey<FormState>();
                       color: Colors.blueGrey.shade800,
                     ),
                   ),
-                  SizedBox(height: 50),
+                  SizedBox(height: 15),
+                  GestureDetector(
+                    onTap: pickImage,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey[300],
+                      child: _imageBytes != null
+                          ? ClipOval(
+                              child: Image.memory(
+                                _imageBytes!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Icon(Icons.add_a_photo,
+                              size: 40, color: Colors.grey[700]),
+                    ),
+                  ),
+
+                  SizedBox(height: 15),
                   SizedBox(
                     width: 350,
                     child: TextFormField(
@@ -125,7 +253,7 @@ final formkey = GlobalKey<FormState>();
                     ),
                   ),
                   SizedBox(height: 15),
-              
+
                   // Corrected Dropdown
                   SizedBox(
                     width: 350,
@@ -142,7 +270,7 @@ final formkey = GlobalKey<FormState>();
                         setState(() {
                           selectedDistrict = newValue;
                         });
-              fetchPlace(newValue!);
+                        fetchPlace(newValue!);
                       },
                       decoration: InputDecoration(
                         labelText: 'District',
@@ -156,8 +284,7 @@ final formkey = GlobalKey<FormState>();
                     ),
                   ),
                   SizedBox(height: 15),
-              SizedBox(
-                
+                  SizedBox(
                     width: 350,
                     child: DropdownButtonFormField<String>(
                       value: selectedPlace,
@@ -238,6 +365,22 @@ final formkey = GlobalKey<FormState>();
                   SizedBox(
                     width: 350,
                     child: TextFormField(
+                      controller: _addressController,
+                      decoration: InputDecoration(
+                        labelText: 'Address',
+                        prefixIcon: Icon(Icons.home_max_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white70,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 15),
+                  SizedBox(
+                    width: 350,
+                    child: TextFormField(
                       controller: _contactController,
                       decoration: InputDecoration(
                         labelText: 'Contact',
@@ -250,15 +393,33 @@ final formkey = GlobalKey<FormState>();
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 15),
+                  SizedBox(
+                    width: 350,
+                    child: TextFormField(
+                      controller: _proofController,
+                      readOnly: true,
+                      onTap: handleProofPick,
+                      decoration: InputDecoration(
+                        labelText: 'Proof',
+                        prefixIcon: Icon(Icons.phone),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white70,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 15),
                   ElevatedButton(
                     onPressed: () {
                       // Handle sign-up action
-                       register();
-              
+                      register();
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -278,6 +439,3 @@ final formkey = GlobalKey<FormState>();
     );
   }
 }
-
-
-

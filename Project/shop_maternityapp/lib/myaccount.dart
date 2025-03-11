@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shop_maternityapp/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AccountManagementPage extends StatefulWidget {
   const AccountManagementPage({super.key});
@@ -9,107 +11,125 @@ class AccountManagementPage extends StatefulWidget {
 }
 
 class _AccountManagementPageState extends State<AccountManagementPage> {
-  final _formKey = GlobalKey<FormState>();
-  
-  // Shop Information
-  final _shopNameController = TextEditingController(text: "Maternity Bliss");
-  final _ownerNameController = TextEditingController(text: "Sarah Johnson");
-  final _emailController = TextEditingController(text: "sarah@maternitybliss.com");
-  final _phoneController = TextEditingController(text: "+1 (555) 123-4567");
-  final _addressController = TextEditingController(text: "123 Maternity Lane, New York, NY 10001");
-  final _websiteController = TextEditingController(text: "www.maternitybliss.com");
-  final _descriptionController = TextEditingController(
-    text: "Maternity Bliss is a premium maternity shop offering high-quality clothing, accessories, and care products for expecting mothers. We focus on comfort, style, and wellness throughout the pregnancy journey.",
-  );
-  
-  // Business Hours
-  final Map<String, Map<String, String>> _businessHours = {
-    'Monday': {'open': '9:00 AM', 'close': '6:00 PM'},
-    'Tuesday': {'open': '9:00 AM', 'close': '6:00 PM'},
-    'Wednesday': {'open': '9:00 AM', 'close': '6:00 PM'},
-    'Thursday': {'open': '9:00 AM', 'close': '6:00 PM'},
-    'Friday': {'open': '9:00 AM', 'close': '6:00 PM'},
-    'Saturday': {'open': '10:00 AM', 'close': '4:00 PM'},
-    'Sunday': {'open': 'Closed', 'close': 'Closed'},
-  };
-  
-  // Services
-  final List<Map<String, dynamic>> _services = [
-    {
-      'name': 'Maternity Photoshoot',
-      'duration': '1 hour',
-      'price': 150.00,
-      'isActive': true,
-    },
-    {
-      'name': 'Prenatal Consultation',
-      'duration': '45 minutes',
-      'price': 75.00,
-      'isActive': true,
-    },
-    {
-      'name': 'Product Fitting',
-      'duration': '30 minutes',
-      'price': 0.00,
-      'isActive': true,
-    },
-    {
-      'name': 'Nutrition Consultation',
-      'duration': '1 hour',
-      'price': 90.00,
-      'isActive': false,
-    },
-  ];
-  
-  // Password Change
-  final _currentPasswordController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  
-  bool _isEditingShopInfo = false;
-  bool _isEditingBusinessHours = false;
-  bool _isPasswordVisible = false;
-  
-  @override
-  void dispose() {
-    _shopNameController.dispose();
-    _ownerNameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
-    _websiteController.dispose();
-    _descriptionController.dispose();
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
+  Map<String, dynamic>? accountData;
+  bool isLoading = true;
+
+  Future<void> fetchAccountData() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      final response = await supabase
+          .from('tbl_shop')
+          .select()
+          .eq('shop_id', user.id)
+          .single();
+
+      setState(() {
+        accountData = response;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching data: $e");
+      setState(() {
+        accountData = null;
+        isLoading = false;
+      });
+    }
   }
-  
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAccountData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 245, 245, 250),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Text(
-              "Account Management",
-              style: GoogleFonts.sanchez(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            SizedBox(height: 30),
-            
-            // Shop Information
-            
-            SizedBox(height: 20),
-          ],
+      appBar: AppBar(
+        title: Text(
+          "Account Management",
+          style: GoogleFonts.sanchez(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black87),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: Colors.black87),
+            onPressed: fetchAccountData,
+          ),
+        ],
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : accountData == null
+              ? Center(
+                  child: Text(
+                    "No shop data found",
+                    style: GoogleFonts.sanchez(fontSize: 18, color: Colors.black54),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoCard("Shop Name", accountData!['shop_name'] ?? 'Not available'),
+                      _buildInfoCard("Email", accountData!['shop_email'] ?? 'Not available'),
+                      _buildInfoCard("Contact", accountData!['shop_contact'] ?? 'Not available'),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildInfoCard(String title, String value) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 15),
+      padding: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 5,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.sanchez(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 5),
+          Text(
+            value,
+            style: GoogleFonts.sanchez(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+        ],
       ),
     );
   }
