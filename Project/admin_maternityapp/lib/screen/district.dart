@@ -134,7 +134,7 @@ class _ManageDistrictState extends State<ManageDistrict> {
                     ),
                     title: Text(
                       data['district_name'],
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

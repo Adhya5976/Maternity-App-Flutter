@@ -14,9 +14,11 @@ class _ManageCategoryState extends State<ManageCategory> {
   int eid = 0;
 
   Future<void> insert() async {
+    if (_categoryController.text.trim().isEmpty) return;
+
     try {
       await supabase.from("tbl_category").insert({
-        'category_name': _categoryController.text,
+        'category_name': _categoryController.text.trim(),
       });
       _categoryController.clear();
       fetchData();
@@ -68,9 +70,11 @@ class _ManageCategoryState extends State<ManageCategory> {
   }
 
   Future<void> update() async {
+    if (_categoryController.text.trim().isEmpty) return;
+
     try {
       await supabase.from('tbl_category').update({
-        'category_name': _categoryController.text,
+        'category_name': _categoryController.text.trim(),
       }).eq('id', eid);
       fetchData();
       _categoryController.clear();
@@ -100,6 +104,7 @@ class _ManageCategoryState extends State<ManageCategory> {
           Card(
             elevation: 5,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            color: Color.fromARGB(255, 194, 170, 250),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Row(
@@ -108,32 +113,35 @@ class _ManageCategoryState extends State<ManageCategory> {
                     child: TextFormField(
                       controller: _categoryController,
                       keyboardType: TextInputType.name,
+                      onChanged: (value) {
+                        setState(() {}); // Update button state when text changes
+                      },
                       decoration: InputDecoration(
                         hintText: "Enter Category",
-                        hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                        hintStyle: TextStyle(color: Colors.black, fontSize: 14),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         filled: true,
-                        fillColor: const Color.fromARGB(255, 194, 170, 250),
+                        fillColor: Colors.white,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton(
-                    onPressed: _categoryController.text.isEmpty
+                    onPressed: _categoryController.text.trim().isEmpty
                         ? null
                         : () {
                             eid == 0 ? insert() : update();
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 182, 152, 251),
+                      backgroundColor: Color.fromARGB(255, 182, 152, 251),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                     child: Text(
                       eid == 0 ? "Add" : "Update",
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ],
@@ -154,10 +162,10 @@ class _ManageCategoryState extends State<ManageCategory> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Colors.purple.shade100,
+                            backgroundColor: Color.fromARGB(255, 194, 170, 250),
                             child: Text(
                               (index + 1).toString(),
-                              style: const TextStyle(color: Colors.black),
+                              style: const TextStyle(color: Color.fromARGB(255, 255, 253, 253)),
                             ),
                           ),
                           title: Text(
@@ -174,11 +182,11 @@ class _ManageCategoryState extends State<ManageCategory> {
                                     _categoryController.text = data['category_name'];
                                   });
                                 },
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon: const Icon(Icons.edit, color: Color.fromARGB(255, 160, 141, 247)),
                               ),
                               IconButton(
                                 onPressed: () => delete(data['id']),
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(Icons.delete_outline_rounded, color: Color.fromARGB(255, 160, 141, 247)),
                               ),
                             ],
                           ),

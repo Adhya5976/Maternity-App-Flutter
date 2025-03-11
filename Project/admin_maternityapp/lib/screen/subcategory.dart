@@ -1,5 +1,4 @@
 import 'package:admin_maternityapp/main.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ManageSubCategory extends StatefulWidget {
@@ -11,31 +10,46 @@ class ManageSubCategory extends StatefulWidget {
 
 class _ManageSubCategoryState extends State<ManageSubCategory> {
   final TextEditingController _subcategoryController = TextEditingController();
+  List<Map<String, dynamic>> subcategories = [];
+  List<Map<String, dynamic>> categories = [];
+  String? selectedCategory;
+  int eid = 0;
 
   Future<void> insert() async {
     try {
       await supabase.from("tbl_subcategory").insert({
         'subcategory_name': _subcategoryController.text,
-        'category_id':selectedCategory
+        'category_id': selectedCategory,
       });
       _subcategoryController.clear();
       fetchData();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Inserted")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("SubCategory Added Successfully")),
+      );
     } catch (e) {
       print("Error Inserting SubCategory: $e");
     }
   }
 
-  List<Map<String, dynamic>> subcategory = [];
   Future<void> fetchData() async {
     try {
       final response = await supabase.from("tbl_subcategory").select("*,tbl_category(*)");
       setState(() {
-        subcategory = response;
+        subcategories = response;
       });
     } catch (e) {
-      print("Error fetching SubCategory: $e");
+      print("Error fetching SubCategories: $e");
+    }
+  }
+
+  Future<void> fetchCategories() async {
+    try {
+      final response = await supabase.from("tbl_category").select();
+      setState(() {
+        categories = response;
+      });
+    } catch (e) {
+      print("Error fetching Categories: $e");
     }
   }
 
@@ -44,24 +58,16 @@ class _ManageSubCategoryState extends State<ManageSubCategory> {
       await supabase.from('tbl_subcategory').delete().eq('subcategory_id', id);
       fetchData();
     } catch (e) {
-      print("Error Deleteing: $e");
+      print("Error Deleting: $e");
     }
   }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-    fetchCategory();
-  }
-
-  int eid = 0;
 
   Future<void> update() async {
     try {
       await supabase.from('tbl_subcategory').update({
         'subcategory_name': _subcategoryController.text,
-      }).eq('id', eid);
+        'category_id':selectedCategory,
+      }).eq('subcategory_id', eid);
       fetchData();
       _subcategoryController.clear();
       setState(() {
@@ -72,109 +78,133 @@ class _ManageSubCategoryState extends State<ManageSubCategory> {
     }
   }
 
-  List<Map<String, dynamic>> categories = [];
-
-  String? selectedCategory;
-
-  Future<void> fetchCategory() async {
-    try {
-      final response = await supabase.from("tbl_category").select();
-      setState(() {
-        categories = response;
-      });
-    } catch (e) {
-      print("Error fetching Category: $e");
-    }
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+    fetchCategories();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-                child: DropdownButtonFormField(
-                    decoration: InputDecoration(
-                      hintText: "Enter Category",
-                      hintStyle:
-                          TextStyle(color: const Color.fromARGB(255, 6, 6, 6)),
-                      border: OutlineInputBorder(),
-                    ),
-                    value: selectedCategory,
-                    items: categories.map((category) {
-                      return DropdownMenuItem(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            color: Color.fromARGB(255, 194, 170, 250),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField(
+                      decoration: InputDecoration(
+                        hintText: "Select Category",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      value: selectedCategory,
+                      items: categories.map((category) {
+                        return DropdownMenuItem(
                           value: category['id'].toString(),
-                          child: Text(category['category_name']));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategory = value;
-                      });
-                    })),
-            Expanded(
-              child: TextFormField(
-                controller: _subcategoryController,
-                keyboardType: TextInputType.name,
-                style: TextStyle(color: const Color.fromARGB(255, 8, 8, 8)),
-                decoration: InputDecoration(
-                  hintText: "Enter SubCategory",
-                  hintStyle:
-                      TextStyle(color: const Color.fromARGB(255, 12, 0, 5)),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (eid == 0) {
-                  insert();
-                } else {
-                  update();
-                }
-              },
-              child: Text("Submit"),
-            ),
-          ],
-        ),
-        subcategory.isEmpty
-            ? Container() // Show loading indicator if no data
-            : ListView.builder(
-                itemCount: subcategory.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  final data = subcategory[index];
-                  return ListTile(
-                    leading: Text((index + 1).toString()),
-                    title: Text(data['subcategory_name']),
-                    subtitle: Text(data['tbl_category']['category_name']),
-                    trailing: SizedBox(
-                      width: 80,
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              setState(() {
-                                eid = data['id'];
-                                _subcategoryController.text =
-                                    data['subcategory_name'];
-                              });
-                            },
-                            icon: Icon(Icons.edit),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              delete(data['id']);
-                            },
-                            icon: Icon(Icons.delete),
-                          ),
-                        ],
+                          child: Text(category['category_name']),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCategory = value;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _subcategoryController,
+                      keyboardType: TextInputType.name,
+                      decoration: InputDecoration(
+                        hintText: "Enter SubCategory",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        filled: true,
+                        fillColor: Colors.white,
                       ),
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      eid == 0 ? insert() : update();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 182, 152, 251),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    ),
+                    child: Text(
+                      eid == 0 ? "Add" : "Update",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-      ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: subcategories.length,
+              itemBuilder: (context, index) {
+                final data = subcategories[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Color.fromARGB(255, 194, 170, 250),
+                      child: Text((index + 1).toString(),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                    title: Text(
+                      data['subcategory_name'],
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      data['tbl_category']['category_name'],
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              eid = data['id'];
+                              _subcategoryController.text = data['subcategory_name'];
+                              print(data['category_id']);
+                              selectedCategory = data['category_id'].toString();
+                            });
+                          },
+                          icon: const Icon(Icons.edit, color: Color.fromARGB(255, 160, 141, 247)),
+                        ),
+                        IconButton(
+                          onPressed: () => delete(data['id']),
+                          icon: const Icon(Icons.delete_outline_rounded, color: Color.fromARGB(255, 160, 141, 247)),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

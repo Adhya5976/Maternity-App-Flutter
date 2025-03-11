@@ -6,8 +6,8 @@ class Dashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text("Welcome to Admin Dashboard")
-      ,
+      child: Text("Welcome to Admin Dashboard",style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)
+      )
     );
   }
 }

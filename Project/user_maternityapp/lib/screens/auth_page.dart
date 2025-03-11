@@ -37,7 +37,7 @@ class AuthPage extends StatelessWidget {
                     children: [
                       Lottie.asset('assets/strock.json', height: 200),
                       Text(
-                        "MommyCare",
+                        "Mamasphere",
                         style: GoogleFonts.poppins(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
