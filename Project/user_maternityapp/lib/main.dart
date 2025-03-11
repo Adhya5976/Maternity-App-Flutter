@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:user_maternityapp/auth_page.dart';
+import 'package:user_maternityapp/screens/auth_page.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 

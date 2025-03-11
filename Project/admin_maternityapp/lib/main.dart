@@ -1,6 +1,4 @@
-import 'package:admin_maternityapp/screen/dashboard.dart';
 import 'package:admin_maternityapp/screen/homepage.dart';
-import 'package:admin_maternityapp/screen/login.dart';
 import 'package:flutter/material.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';

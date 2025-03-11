@@ -1,15 +1,14 @@
 // home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:user_maternityapp/addpost.dart';
 import 'package:user_maternityapp/components/colors.dart';
-import 'package:user_maternityapp/dietplan.dart';
-import 'package:user_maternityapp/exercise.dart';
+import 'package:user_maternityapp/screens/dietplan.dart';
+import 'package:user_maternityapp/screens/exercise.dart';
 import 'package:user_maternityapp/main.dart';
-import 'package:user_maternityapp/profilepage.dart';
-import 'package:user_maternityapp/shopping.dart';
-import 'package:user_maternityapp/viewpost.dart';
-import 'package:user_maternityapp/weighttracker.dart';
+import 'package:user_maternityapp/screens/profilepage.dart';
+import 'package:user_maternityapp/screens/shopping.dart';
+import 'package:user_maternityapp/screens/viewpost.dart';
+import 'package:user_maternityapp/screens/weighttracker.dart';
 import 'package:lottie/lottie.dart';
 
 class HomeScreen extends StatefulWidget {

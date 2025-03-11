@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:user_maternityapp/main.dart';
-import 'package:user_maternityapp/weight.dart';
+import 'package:user_maternityapp/screens/weight.dart';
 
 class WeightTrackingPage extends StatefulWidget {
   const WeightTrackingPage({super.key});
