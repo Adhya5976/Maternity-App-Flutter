@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:user_maternityapp/main.dart';
+import 'package:user_maternityapp/screens/shopping/my_order.dart';
+import 'package:user_maternityapp/screens/payment/payment.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -119,7 +121,7 @@ class _CartPageState extends State<CartPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Item removed from cart'),
-          backgroundColor: Colors.pink,
+          backgroundColor: Color(0xFF64B5F6),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
@@ -153,21 +155,21 @@ class _CartPageState extends State<CartPage> {
         actions: [
           TextButton.icon(
             onPressed: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => OrdersPage()),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => OrdersPage()),
+              );
             },
-            icon: Icon(Icons.shopping_bag_outlined, color: Colors.pink),
+            icon: Icon(Icons.shopping_bag_outlined, color: Color(0xFF64B5F6)),
             label: Text(
               "My Orders",
-              style: TextStyle(color: Colors.pink),
+              style: TextStyle(color: Color(0xFF64B5F6)),
             ),
           ),
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.pink))
+          ? Center(child: CircularProgressIndicator(color: Color(0xFF64B5F6)))
           : cartItems.isEmpty
               ? _buildEmptyCart()
               : Column(
@@ -253,7 +255,7 @@ class _CartPageState extends State<CartPage> {
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.pink,
+                                              color: Color(0xFF64B5F6),
                                             ),
                                           ),
                                           SizedBox(height: 8),
@@ -422,7 +424,7 @@ class _CartPageState extends State<CartPage> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.pink,
+                                    color: Color(0xFF64B5F6),
                                   ),
                                 ),
                               ],
@@ -433,15 +435,15 @@ class _CartPageState extends State<CartPage> {
                               height: 54,
                               child: ElevatedButton(
                                 onPressed: cartItems.isEmpty ? null : () {
-                                  // Navigator.push(
-                                  //   context,
-                                  //   MaterialPageRoute(
-                                  //     builder: (context) => CheckoutPage(bid: bid!),
-                                  //   ),
-                                  // );
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PaymentGatewayScreen(id: bid! ),
+                                    ),
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.pink,
+                                  backgroundColor: Color(0xFF64B5F6),
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -514,7 +516,7 @@ class _CartPageState extends State<CartPage> {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.pink,
+              backgroundColor: Color(0xFF64B5F6),
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(

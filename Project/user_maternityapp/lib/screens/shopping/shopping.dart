@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:user_maternityapp/screens/cart.dart';
-import 'package:user_maternityapp/screens/product_details.dart';
+import 'package:user_maternityapp/screens/shopping/cart.dart';
+import 'package:user_maternityapp/screens/shopping/product_details.dart';
 
 class ShoppingPage extends StatefulWidget {
   const ShoppingPage({super.key});
@@ -67,6 +67,8 @@ class _ShoppingPageState extends State<ShoppingPage> {
   }
 
   void filterItems() {
+    print(selectedCategoryId);
+    print(selectedSubcategoryId);
     setState(() {
       filteredItems = items.where((item) {
         // Filter by search query
@@ -99,6 +101,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFF8F2F7),
       appBar: AppBar(
         title: Text('Maternity Shop', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
@@ -114,31 +117,31 @@ class _ShoppingPageState extends State<ShoppingPage> {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => CartPage()));
                 },
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.pink,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '0',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   top: 8,
+              //   right: 8,
+              //   child: Container(
+              //     padding: EdgeInsets.all(4),
+              //     decoration: BoxDecoration(
+              //       color: Color(0xFF64B5F6),
+              //       shape: BoxShape.circle,
+              //     ),
+              //     child: Text(
+              //       '0',
+              //       style: TextStyle(
+              //         color: Colors.white,
+              //         fontSize: 10,
+              //         fontWeight: FontWeight.bold,
+              //       ),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.pink))
+          ? Center(child: CircularProgressIndicator(color: Color(0xFF64B5F6)))
           : Column(
               children: [
                 // Search bar
@@ -149,7 +152,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
                       hintText: 'Search products...',
                       prefixIcon: Icon(Icons.search, color: Colors.grey),
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
@@ -183,7 +186,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
                             onPressed: resetFilters,
                             child: Text(
                               'Reset',
-                              style: TextStyle(color: Colors.pink),
+                              style: TextStyle(color: Color(0xFF64B5F6)),
                             ),
                           ),
                         ],
@@ -195,19 +198,19 @@ class _ShoppingPageState extends State<ShoppingPage> {
                           children: [
                             // Category filter chips
                             ...categories.map((category) {
-                              bool isSelected = selectedCategoryId == category['category_id'];
+                              bool isSelected = selectedCategoryId == category['id'];
                               return Padding(
                                 padding: EdgeInsets.only(right: 8),
                                 child: FilterChip(
                                   label: Text(category['category_name']),
                                   selected: isSelected,
-                                  selectedColor: Colors.pink[100],
-                                  checkmarkColor: Colors.pink,
+                                  selectedColor: Colors.blue[100],
+                                  checkmarkColor: Color(0xFF64B5F6),
                                   onSelected: (selected) {
                                     setState(() {
                                       if (selected) {
-                                        selectedCategoryId = category['category_id'];
-                                        fetchSubcategories(category['category_id']);
+                                        selectedCategoryId = category['id'];
+                                        fetchSubcategories(category['id']);
                                       } else {
                                         selectedCategoryId = null;
                                         subcategories = [];
@@ -231,17 +234,17 @@ class _ShoppingPageState extends State<ShoppingPage> {
                           child: Row(
                             children: [
                               ...subcategories.map((subcategory) {
-                                bool isSelected = selectedSubcategoryId == subcategory['subcategory_id'];
+                                bool isSelected = selectedSubcategoryId == subcategory['id'];
                                 return Padding(
                                   padding: EdgeInsets.only(right: 8),
                                   child: FilterChip(
                                     label: Text(subcategory['subcategory_name']),
                                     selected: isSelected,
-                                    selectedColor: Colors.pink[100],
-                                    checkmarkColor: Colors.pink,
+                                    selectedColor: Colors.blue[100],
+                                    checkmarkColor: Color(0xFF64B5F6),
                                     onSelected: (selected) {
                                       setState(() {
-                                        selectedSubcategoryId = selected ? subcategory['subcategory_id'] : null;
+                                        selectedSubcategoryId = selected ? subcategory['id'] : null;
                                         filterItems();
                                       });
                                     },
@@ -403,7 +406,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.pink,
+                                              color: Color(0xFF64B5F6),
                                             ),
                                           ),
                                         ],

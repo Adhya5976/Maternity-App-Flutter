@@ -6,7 +6,7 @@ import 'package:user_maternityapp/components/colors.dart';
 import 'package:user_maternityapp/components/form_validation.dart';
 import 'package:user_maternityapp/screens/homepage.dart';
 import 'package:user_maternityapp/main.dart';
-import 'package:user_maternityapp/screens/pregnency_date.dart';
+import 'package:user_maternityapp/screens/account/pregnency_date.dart';
 
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});

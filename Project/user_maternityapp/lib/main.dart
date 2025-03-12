@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:user_maternityapp/screens/auth_page.dart';
+import 'package:user_maternityapp/screens/account/auth_page.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:user_maternityapp/screens/homepage.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
@@ -18,6 +19,24 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false,  home: AuthPage());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: AuthWrapper(), // Use a wrapper to handle navigation logic
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Check if the user is logged in
+    final session = supabase.auth.currentSession;
+
+    // Navigate to the appropriate screen based on the authentication state
+    if (session != null) {
+      return HomeScreen(); // Replace with your home screen widget
+    } else {
+      return AuthPage(); // Replace with your auth page widget
+    }
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:user_maternityapp/screens/addpost.dart';
+import 'package:user_maternityapp/screens/community/addpost.dart';
 import 'package:user_maternityapp/main.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:user_maternityapp/screens/view_comments.dart';
+import 'package:user_maternityapp/screens/community/view_comments.dart';
 
 class Viewpost extends StatefulWidget {
   const Viewpost({super.key});

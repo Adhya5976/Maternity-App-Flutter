@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:user_maternityapp/components/colors.dart';
-import 'package:user_maternityapp/screens/dietplan.dart';
-import 'package:user_maternityapp/screens/exercise.dart';
+import 'package:user_maternityapp/screens/personalization/dietplan.dart';
+import 'package:user_maternityapp/screens/personalization/exercise.dart';
 import 'package:user_maternityapp/main.dart';
-import 'package:user_maternityapp/screens/profilepage.dart';
-import 'package:user_maternityapp/screens/shopping.dart';
-import 'package:user_maternityapp/screens/viewpost.dart';
-import 'package:user_maternityapp/screens/weighttracker.dart';
+import 'package:user_maternityapp/screens/account/profilepage.dart';
+import 'package:user_maternityapp/screens/shopping/shopping.dart';
+import 'package:user_maternityapp/screens/community/viewpost.dart';
+import 'package:user_maternityapp/screens/personalization/weighttracker.dart';
 import 'package:lottie/lottie.dart';
 
 class HomeScreen extends StatefulWidget {

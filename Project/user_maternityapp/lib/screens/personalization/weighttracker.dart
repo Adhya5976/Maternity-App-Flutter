@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:user_maternityapp/main.dart';
-import 'package:user_maternityapp/screens/weight.dart';
+import 'package:user_maternityapp/screens/personalization/weight.dart';
 
 class WeightTrackingPage extends StatefulWidget {
   const WeightTrackingPage({super.key});
@@ -31,7 +31,7 @@ class _WeightTrackingPageState extends State<WeightTrackingPage> {
     try {
       final response = await supabase
           .from('tbl_weighttracker')
-          .select()
+          .select().eq('user_id', supabase.auth.currentUser!.id)
           .order('weighttracker_date', ascending: false);
       
       setState(() {

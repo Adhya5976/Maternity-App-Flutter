@@ -74,6 +74,7 @@ class _ProductPageState extends State<ProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 242, 243, 248),
       appBar: AppBar(title: Text(product?['product_name'] ?? "Loading...")),
       body: isLoading
           ? Center(child: CircularProgressIndicator())

@@ -25,6 +25,9 @@ dependencies:
   timeago: ^3.2.2
   cached_network_image: ^3.4.1
   timeline_tile: ^2.0.0
+  flutter_credit_card: ^4.1.0
+  luhn: ^1.0.1
+  confetti: ^0.8.0
 
 dev_dependencies:
   flutter_test:

@@ -28,7 +28,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       // Fetch order details
       final orderResponse = await supabase
           .from('tbl_booking')
-          .select('*, tbl_payment(*), tbl_address(*)')
+          .select()
           .eq('id', widget.orderId)
           .single();
 
@@ -36,8 +36,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       final itemsResponse = await supabase
           .from('tbl_cart')
           .select('*, tbl_product(*)')
-          .eq('booking_id', widget.orderId)
-          .eq('cart_status', 1);
+          .eq('id', widget.orderId);
 
       List<Map<String, dynamic>> items = [];
       for (var item in itemsResponse) {
@@ -104,7 +103,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           foregroundColor: Colors.black,
           elevation: 0,
         ),
-        body: Center(child: CircularProgressIndicator(color: Colors.pink)),
+        body:
+            Center(child: CircularProgressIndicator(color: Color(0xFF64B5F6))),
       );
     }
 
@@ -168,15 +168,19 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: getOrderStatusColor(orderDetails!['booking_status']).withOpacity(0.1),
+                          color: getOrderStatusColor(
+                                  orderDetails!['booking_status'])
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           getOrderStatusText(orderDetails!['booking_status']),
                           style: TextStyle(
-                            color: getOrderStatusColor(orderDetails!['booking_status']),
+                            color: getOrderStatusColor(
+                                orderDetails!['booking_status']),
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -185,131 +189,18 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                     ],
                   ),
                   SizedBox(height: 24),
-                  
+
                   // Order timeline
                   _buildOrderTimeline(orderDetails!['booking_status']),
                 ],
               ),
             ),
-            
+
             // Order information
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 "Order Information",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.all(16),
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  _buildInfoRow("Order Date", "$formattedDate at $formattedTime"),
-                  Divider(height: 24),
-                  _buildInfoRow("Order ID", "#${widget.orderId}"),
-                  Divider(height: 24),
-                  _buildInfoRow(
-                    "Payment Method", 
-                    orderDetails!['tbl_payment']?['payment_method'] ?? "N/A"
-                  ),
-                  Divider(height: 24),
-                  _buildInfoRow(
-                    "Payment Status", 
-                    orderDetails!['tbl_payment']?['payment_status'] == 1 
-                      ? "Paid" 
-                      : "Pending"
-                  ),
-                ],
-              ),
-            ),
-            
-            // Shipping address
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "Shipping Address",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.all(16),
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    orderDetails!['tbl_address']?['name'] ?? "N/A",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    orderDetails!['tbl_address']?['address_line1'] ?? "N/A",
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                  if (orderDetails!['tbl_address']?['address_line2'] != null)
-                    Text(
-                      orderDetails!['tbl_address']['address_line2'],
-                      style: TextStyle(
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  SizedBox(height: 4),
-                  Text(
-                    "${orderDetails!['tbl_address']?['city'] ?? ''}, ${orderDetails!['tbl_address']?['state'] ?? ''} ${orderDetails!['tbl_address']?['pincode'] ?? ''}",
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    "Phone: ${orderDetails!['tbl_address']?['phone'] ?? 'N/A'}",
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Order items
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "Order Items",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -348,11 +239,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                             width: 70,
                             height: 70,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
                               width: 70,
                               height: 70,
                               color: Colors.grey[200],
-                              child: Icon(Icons.image_not_supported, color: Colors.grey),
+                              child: Icon(Icons.image_not_supported,
+                                  color: Colors.grey),
                             ),
                           ),
                         ),
@@ -381,7 +274,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                 "₹${item['price']}",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.pink,
+                                  color: Color(0xFF64B5F6),
                                 ),
                               ),
                             ],
@@ -393,7 +286,92 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 },
               ),
             ),
-            
+            Container(
+              margin: EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildInfoRow(
+                      "Order Date", "$formattedDate at $formattedTime"),
+                  Divider(height: 24),
+                  _buildInfoRow("Order ID", "#${widget.orderId}"),
+                  Divider(height: 24),
+                  _buildInfoRow("Payment Method",
+                      orderDetails!['tbl_payment']?['payment_method'] ?? "N/A"),
+                  Divider(height: 24),
+                  _buildInfoRow(
+                      "Payment Status",
+                      orderDetails!['tbl_payment']?['payment_status'] == 1
+                          ? "Paid"
+                          : "Pending"),
+                ],
+              ),
+            ),
+
+            // Shipping address
+            // Padding(
+            //   padding: EdgeInsets.symmetric(horizontal: 16),
+            //   child: Text(
+            //     "Shipping Address",
+            //     style: TextStyle(
+            //       fontSize: 18,
+            //       fontWeight: FontWeight.bold,
+            //     ),
+            //   ),
+            // ),
+            // Container(
+            //   margin: EdgeInsets.all(16),
+            //   padding: EdgeInsets.all(16),
+            //   decoration: BoxDecoration(
+            //     color: Colors.white,
+            //     borderRadius: BorderRadius.circular(16),
+            //     boxShadow: [
+            //       BoxShadow(
+            //         color: Colors.black.withOpacity(0.05),
+            //         blurRadius: 10,
+            //         offset: Offset(0, 4),
+            //       ),
+            //     ],
+            //   ),
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       Text(
+            //         user['user_name'] ?? "N/A",
+            //         style: TextStyle(
+            //           fontWeight: FontWeight.bold,
+            //           fontSize: 16,
+            //         ),
+            //       ),
+            //       SizedBox(height: 8),
+            //       Text(
+            //         user['user_name'] ?? "N/A",
+            //         style: TextStyle(
+            //           color: Colors.grey[700],
+            //         ),
+            //       ),
+            //       SizedBox(height: 8),
+            //       Text(
+            //         "Phone: ${user[] ?? 'N/A'}",
+            //         style: TextStyle(
+            //           color: Colors.grey[700],
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
+
             // Order summary
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -475,7 +453,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.pink,
+                          color: Color(0xFF64B5F6),
                         ),
                       ),
                     ],
@@ -483,7 +461,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 ],
               ),
             ),
-            
+
             // Support and actions
             Container(
               margin: EdgeInsets.all(16),
@@ -507,8 +485,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         // Implement cancel order functionality
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("Cancel order functionality coming soon!"),
-                            backgroundColor: Colors.pink,
+                            content:
+                                Text("Cancel order functionality coming soon!"),
+                            backgroundColor: Color(0xFF64B5F6),
                           ),
                         );
                       },
@@ -528,16 +507,17 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       // Implement contact support functionality
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text("Contact support functionality coming soon!"),
-                          backgroundColor: Colors.pink,
+                          content: Text(
+                              "Contact support functionality coming soon!"),
+                          backgroundColor: Color(0xFF64B5F6),
                         ),
                       );
                     },
                     icon: Icon(Icons.support_agent),
                     label: Text("Contact Support"),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.pink,
-                      side: BorderSide(color: Colors.pink),
+                      foregroundColor: Color(0xFF64B5F6),
+                      side: BorderSide(color: Color(0xFF64B5F6)),
                       minimumSize: Size(double.infinity, 45),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -599,10 +579,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           alignment: TimelineAlign.start,
           indicatorStyle: IndicatorStyle(
             width: 20,
-            color: status >= 1 ? Colors.green : Colors.grey[300],
+            color:
+                status >= 1 ? Colors.green : (Colors.grey[300] ?? Colors.grey),
             iconStyle: IconStyle(
               color: Colors.white,
-              iconData: status >= 1 ? Icons.check : null,
+              iconData:
+                  status >= 1 ? Icons.check : Icons.circle, // Default fallback
               fontSize: 12,
             ),
           ),
@@ -616,10 +598,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           alignment: TimelineAlign.start,
           indicatorStyle: IndicatorStyle(
             width: 20,
-            color: status >= 2 ? Colors.green : Colors.grey[300],
+            color:
+                status >= 2 ? Colors.green : (Colors.grey[300] ?? Colors.grey),
             iconStyle: IconStyle(
               color: Colors.white,
-              iconData: status >= 2 ? Icons.check : null,
+              iconData:
+                  status >= 2 ? Icons.check : Icons.circle, // Default fallback
               fontSize: 12,
             ),
           ),
@@ -634,10 +618,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           isLast: true,
           indicatorStyle: IndicatorStyle(
             width: 20,
-            color: status >= 3 ? Colors.green : Colors.grey[300],
+            color:
+                status >= 3 ? Colors.green : (Colors.grey[300] ?? Colors.grey),
             iconStyle: IconStyle(
               color: Colors.white,
-              iconData: status >= 3 ? Icons.check : null,
+              iconData:
+                  status >= 3 ? Icons.check : Icons.circle, // Default fallback
               fontSize: 12,
             ),
           ),
@@ -679,9 +665,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
   double _calculateSubtotal() {
     return orderItems.fold(
-      0, 
-      (sum, item) => sum + (item['price'] * item['quantity'])
-    );
+        0, (sum, item) => sum + (item['price'] * item['quantity']));
   }
 }
-

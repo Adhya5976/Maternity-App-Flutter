@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:user_maternityapp/screens/auth_page.dart';
+import 'package:user_maternityapp/screens/account/auth_page.dart';
 import 'package:user_maternityapp/main.dart';
 
 class PregnancyDatePicker extends StatefulWidget {
