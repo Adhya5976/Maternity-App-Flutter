@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shop_maternityapp/homepage.dart';
 import 'package:shop_maternityapp/login.dart';
 import 'package:shop_maternityapp/signup.dart';
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shop_maternityapp/Landingpage.dart';
+import 'package:shop_maternityapp/homepage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
@@ -11,13 +12,33 @@ Future<void> main() async {
 }
 
 final supabase = Supabase.instance.client;
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false,
-      home: LandingPage(),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: AuthWrapper(),
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Check if the user is already logged in
+    final session = supabase.auth.currentSession;
+
+    if (session != null) {
+      // User is logged in, navigate to HomePage
+      return DashboardPage();
+    } else {
+      // User is not logged in, navigate to LandingPage
+      return LandingPage();
+    }
   }
 }
