@@ -288,13 +288,13 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                           color: Color.fromARGB(255, 198, 176, 249),
                         ),
                       ),
-                      Text(
-                        'Stock: ',
-                        style: GoogleFonts.sanchez(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
+                      // Text(
+                      //   'Stock: ',
+                      //   style: GoogleFonts.sanchez(
+                      //     fontSize: 14,
+                      //     color: Colors.grey[600],
+                      //   ),
+                      // ),
                     ],
                   ),
                   SizedBox(height: 10),

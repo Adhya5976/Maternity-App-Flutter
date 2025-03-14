@@ -31,9 +31,28 @@ class _ShoppingPageState extends State<ShoppingPage> {
   Future<void> fetchItems() async {
     try {
       final response = await supabase.from('tbl_product').select("*,tbl_subcategory(*,tbl_category(*))");
+      List<Map<String, dynamic>> products = [];
+      for (var items in response){
+        final response = await supabase
+          .from('tbl_review')
+          .select()
+          .eq('product_id', items['product_id']);
+      
+      final reviewsList = List<Map<String, dynamic>>.from(response);
+      
+      // Calculate average rating
+      double totalRating = 0;
+      for (var review in reviewsList) {
+        totalRating += double.parse(review['review_rating'].toString());
+      }
+      
+      double avgRating = reviewsList.isNotEmpty ? totalRating / reviewsList.length : 0;
+        items['rating'] = avgRating;
+        products.add(items);
+      }
       setState(() {
-        items = List<Map<String, dynamic>>.from(response);
-        filteredItems = List<Map<String, dynamic>>.from(response);
+        items = products;
+        filteredItems = products;
         isLoading = false;
       });
     } catch (e) {
@@ -392,7 +411,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
                                             children: [
                                               Icon(Icons.star, size: 16, color: Colors.amber),
                                               Text(
-                                                ' 4.5',
+                                                item['rating'].toString(),
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.grey[700],

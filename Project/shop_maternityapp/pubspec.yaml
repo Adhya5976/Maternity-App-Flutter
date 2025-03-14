@@ -11,6 +11,7 @@ dependencies:
   fl_chart: ^0.70.2
   flutter:
     sdk: flutter
+  flutter_rating_bar: ^4.0.1
   google_fonts: ^6.2.1
   image_picker: ^1.1.2
   intl: ^0.20.2

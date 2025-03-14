@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:user_maternityapp/main.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:user_maternityapp/screens/shopping/rating.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final int orderId;
@@ -14,7 +15,7 @@ class OrderDetailsPage extends StatefulWidget {
 
 class _OrderDetailsPageState extends State<OrderDetailsPage> {
   Map<String, dynamic>? orderDetails;
-  List<Map<String, dynamic>> orderItems = [];
+  Map<String, dynamic> orderItems = {};
   bool isLoading = true;
 
   @override
@@ -36,19 +37,17 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       final itemsResponse = await supabase
           .from('tbl_cart')
           .select('*, tbl_product(*)')
-          .eq('id', widget.orderId);
-
-      List<Map<String, dynamic>> items = [];
-      for (var item in itemsResponse) {
-        items.add({
-          "id": item['id'],
-          "product_id": item['product_id'],
-          "name": item['tbl_product']['product_name'],
-          "image": item['tbl_product']['product_image'],
-          "price": item['tbl_product']['product_price'],
-          "quantity": item['cart_qty'],
-        });
-      }
+          .eq('id', widget.orderId).single();
+        Map<String,dynamic> items = {
+          "id": itemsResponse['id'],
+          "product_id": itemsResponse['product_id'],
+          "name": itemsResponse['tbl_product']['product_name'],
+          "image": itemsResponse['tbl_product']['product_image'],
+          "price": itemsResponse['tbl_product']['product_price'],
+          "quantity": itemsResponse['cart_qty'],
+          "status":itemsResponse['cart_status'],
+        };
+      
 
       setState(() {
         orderDetails = orderResponse;
@@ -172,15 +171,15 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                             EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: getOrderStatusColor(
-                                  orderDetails!['booking_status'])
+                                  orderItems['status'])
                               .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          getOrderStatusText(orderDetails!['booking_status']),
+                          getOrderStatusText(orderItems['status']),
                           style: TextStyle(
                             color: getOrderStatusColor(
-                                orderDetails!['booking_status']),
+                                orderItems['status']),
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -191,7 +190,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   SizedBox(height: 24),
 
                   // Order timeline
-                  _buildOrderTimeline(orderDetails!['booking_status']),
+                  _buildOrderTimeline(orderItems['status']),
                 ],
               ),
             ),
@@ -220,14 +219,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   ),
                 ],
               ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: orderItems.length,
-                separatorBuilder: (context, index) => Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final item = orderItems[index];
-                  return Padding(
+              child: Padding(
                     padding: EdgeInsets.all(16),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,7 +227,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            item['image'],
+                            orderItems['image'],
                             width: 70,
                             height: 70,
                             fit: BoxFit.cover,
@@ -255,7 +247,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item['name'],
+                                orderItems['name'],
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -264,14 +256,14 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                "Qty: ${item['quantity']}",
+                                "Qty: ${orderItems['quantity']}",
                                 style: TextStyle(
                                   color: Colors.grey[700],
                                 ),
                               ),
                               SizedBox(height: 4),
                               Text(
-                                "₹${item['price']}",
+                                "₹${orderItems['price']}",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF64B5F6),
@@ -282,9 +274,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
+                  )
             ),
             Container(
               margin: EdgeInsets.all(16),
@@ -305,14 +295,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   _buildInfoRow(
                       "Order Date", "$formattedDate at $formattedTime"),
                   Divider(height: 24),
-                  _buildInfoRow("Order ID", "#${widget.orderId}"),
-                  Divider(height: 24),
-                  _buildInfoRow("Payment Method",
-                      orderDetails!['tbl_payment']?['payment_method'] ?? "N/A"),
-                  Divider(height: 24),
+                 
                   _buildInfoRow(
                       "Payment Status",
-                      orderDetails!['tbl_payment']?['payment_status'] == 1
+                      orderDetails!['booking_status'] == 1
                           ? "Paid"
                           : "Pending"),
                 ],
@@ -409,31 +395,31 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         ),
                       ),
                       Text(
-                        "₹${_calculateSubtotal().toStringAsFixed(2)}",
+                        "₹${orderItems['price']}",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Shipping",
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      Text(
-                        "₹50.00",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // SizedBox(height: 12),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //   children: [
+                  //     Text(
+                  //       "Shipping",
+                  //       style: TextStyle(
+                  //         color: Colors.grey[700],
+                  //       ),
+                  //     ),
+                  //     Text(
+                  //       "₹50.00",
+                  //       style: TextStyle(
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Divider(),
@@ -449,7 +435,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         ),
                       ),
                       Text(
-                        "₹${orderDetails!['tbl_payment']?['payment_amount'] ?? 'N/A'}",
+                        "₹${orderItems['price']}",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -479,27 +465,22 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               ),
               child: Column(
                 children: [
-                  if (orderDetails!['booking_status'] == 1)
-                    ElevatedButton(
+                  if (orderItems['status'] == 3)
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.star_border_outlined, color: Colors.amber,),
                       onPressed: () {
                         // Implement cancel order functionality
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text("Cancel order functionality coming soon!"),
-                            backgroundColor: Color(0xFF64B5F6),
-                          ),
-                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => FeedbackPage(pid: orderItems['product_id'],),));
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[400],
+                        backgroundColor: Color(0xFF64B5F6),
                         foregroundColor: Colors.white,
                         minimumSize: Size(double.infinity, 45),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text("Cancel Order"),
+                      label: Text("Rate Us"),
                     ),
                   SizedBox(height: 12),
                   OutlinedButton.icon(
@@ -663,8 +644,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     );
   }
 
-  double _calculateSubtotal() {
-    return orderItems.fold(
-        0, (sum, item) => sum + (item['price'] * item['quantity']));
-  }
+  // double _calculateSubtotal() {
+  //   return orderItems.fold(
+  //       0, (sum, item) => sum + (item['price'] * item['quantity']));
+  // }
 }

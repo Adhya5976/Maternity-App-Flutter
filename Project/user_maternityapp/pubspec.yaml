@@ -28,6 +28,7 @@ dependencies:
   flutter_credit_card: ^4.1.0
   luhn: ^1.0.1
   confetti: ^0.8.0
+  flutter_rating_bar: ^4.0.1
 
 dev_dependencies:
   flutter_test:
