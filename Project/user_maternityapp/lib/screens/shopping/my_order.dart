@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:user_maternityapp/main.dart';
 import 'package:user_maternityapp/screens/shopping/order_details.dart';
@@ -57,6 +58,7 @@ class _OrdersPageState extends State<OrdersPage> {
         if (productResponse != null) {
           products.add({
             "id": cartItem['id'],
+            "order_id": cartItem['booking_id'],
             "product_id": cartItem['product_id'],
             "name": productResponse['product_name'],
             "image": productResponse['product_image'],
@@ -100,7 +102,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     var product = cartProducts[index];
                     return InkWell(
                       onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailsPage(orderId: 2,)));
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailsPage(orderId: product['order_id'],cartId: product['id'],)));
                       },
                       child: Container(
                         margin: EdgeInsets.only(bottom: 16),

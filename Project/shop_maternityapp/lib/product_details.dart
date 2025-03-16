@@ -35,6 +35,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }
 
   int remaining = 0;
+  int total = 0;
 
   Future<void> fetchRemStock() async {
     try {
@@ -54,7 +55,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
       int remainingStock = totalStock - totalCartQty;
       setState(() {
-        remaining=remainingStock;
+        remaining = remainingStock;
+        total = totalStock;
       });
     } catch (e) {
       print("ErrorL $e");
@@ -63,7 +65,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   Future<void> fetchStock() async {
     try {
-      final response = await supabase.from('tbl_stock').select().eq('product_id', widget.product['product_id']);
+      final response = await supabase
+          .from('tbl_stock')
+          .select()
+          .eq('product_id', widget.product['product_id']);
       setState(() {
         stock = response;
       });
@@ -78,24 +83,25 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           .from('tbl_review')
           .select()
           .eq('product_id', widget.product['product_id']);
-      
+
       final reviewsList = List<Map<String, dynamic>>.from(response);
-      
+
       // Calculate average rating
       double totalRating = 0;
       for (var review in reviewsList) {
         totalRating += double.parse(review['review_rating'].toString());
       }
-      
-      double avgRating = reviewsList.isNotEmpty ? totalRating / reviewsList.length : 0;
-      
+
+      double avgRating =
+          reviewsList.isNotEmpty ? totalRating / reviewsList.length : 0;
+
       setState(() {
         reviews = reviewsList;
         averageRating = avgRating;
         reviewCount = reviewsList.length;
         isLoadingReviews = false;
       });
-      
+
       // Fetch user names for each review
       for (var review in reviews) {
         final userId = review['user_id'];
@@ -105,7 +111,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               .select('user_name')
               .eq('id', userId)
               .single();
-          
+
           setState(() {
             userNames[userId] = userResponse['user_name'] ?? 'Anonymous';
           });
@@ -121,7 +127,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -183,7 +188,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(10),
                                 image: DecorationImage(
-                                  image: NetworkImage(productImages[selectedImageIndex]),
+                                  image: NetworkImage(
+                                      productImages[selectedImageIndex]),
                                   fit: BoxFit.cover,
                                 ),
                                 boxShadow: [
@@ -214,10 +220,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
                                       border: selectedImageIndex == index
-                                          ? Border.all(color: const Color(0xFF64B5F6), width: 2)
+                                          ? Border.all(
+                                              color: const Color(0xFF64B5F6),
+                                              width: 2)
                                           : null,
                                       image: DecorationImage(
-                                        image: NetworkImage(productImages[index]),
+                                        image:
+                                            NetworkImage(productImages[index]),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -303,13 +312,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               children: [
                                 _buildInfoCard(
                                   "Category",
-                                  widget.product['tbl_subcategory']['tbl_category']['category_name'],
+                                  widget.product['tbl_subcategory']
+                                      ['tbl_category']['category_name'],
                                   const Color(0xFF6C63FF),
                                 ),
                                 const SizedBox(width: 16),
                                 _buildInfoCard(
                                   "Sub Category",
-                                  widget.product['tbl_subcategory']['subcategory_name'],
+                                  widget.product['tbl_subcategory']
+                                      ['subcategory_name'],
                                   const Color(0xFF4CAF50),
                                 ),
                               ],
@@ -319,24 +330,37 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: remaining > 0 ? const Color(0xFF4CAF50).withOpacity(0.1) : const Color(0xFFFF5252).withOpacity(0.1),
+                                    color: remaining > 0
+                                        ? const Color(0xFF4CAF50)
+                                            .withOpacity(0.1)
+                                        : const Color(0xFFFF5252)
+                                            .withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     children: [
                                       Icon(
-                                        remaining > 0 ? Icons.check_circle : Icons.error,
+                                        remaining > 0
+                                            ? Icons.check_circle
+                                            : Icons.error,
                                         size: 18,
-                                        color: remaining > 0 ? const Color(0xFF4CAF50) : const Color(0xFFFF5252),
+                                        color: remaining > 0
+                                            ? const Color(0xFF4CAF50)
+                                            : const Color(0xFFFF5252),
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        remaining > 0 ? "In Stock ($remaining available)" : "Out of Stock",
+                                        remaining > 0
+                                            ? "In Stock ($remaining available)"
+                                            : "Out of Stock",
                                         style: GoogleFonts.sanchez(
                                           fontWeight: FontWeight.bold,
-                                          color: remaining > 0 ? const Color(0xFF4CAF50) : const Color(0xFFFF5252),
+                                          color: remaining > 0
+                                              ? const Color(0xFF4CAF50)
+                                              : const Color(0xFFFF5252),
                                         ),
                                       ),
                                     ],
@@ -352,7 +376,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF64B5F6),
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
@@ -368,9 +393,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Stock History Section
             Container(
               padding: const EdgeInsets.all(24),
@@ -407,24 +432,28 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: DataTable(
-                              headingRowColor: MaterialStateProperty.all(const Color(0xFFF8F9FA)),
+                              headingRowColor: MaterialStateProperty.all(
+                                  const Color(0xFFF8F9FA)),
                               columns: [
                                 DataColumn(
                                   label: Text(
                                     "ID",
-                                    style: GoogleFonts.sanchez(fontWeight: FontWeight.bold),
+                                    style: GoogleFonts.sanchez(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 DataColumn(
                                   label: Text(
                                     "Quantity",
-                                    style: GoogleFonts.sanchez(fontWeight: FontWeight.bold),
+                                    style: GoogleFonts.sanchez(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 DataColumn(
                                   label: Text(
                                     "Date Added",
-                                    style: GoogleFonts.sanchez(fontWeight: FontWeight.bold),
+                                    style: GoogleFonts.sanchez(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -445,7 +474,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                       ),
                                     )),
                                     DataCell(Text(
-                                      stockItem['stock_date'].toString().split('T')[0],
+                                      stockItem['stock_date']
+                                          .toString()
+                                          .split('T')[0],
                                       style: GoogleFonts.sanchez(),
                                     )),
                                   ],
@@ -470,12 +501,18 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             ),
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Text("Total Stock: $total", style: TextStyle(
+                            color: Colors.green
+                          ),),
+                        ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Reviews Section
             Container(
               padding: const EdgeInsets.all(24),
@@ -507,7 +544,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       ),
                       if (reviewCount > 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: const Color(0xFF64B5F6).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -533,9 +571,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  
                   isLoadingReviews
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF64B5F6)))
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              color: Color(0xFF64B5F6)))
                       : reviews.isEmpty
                           ? Container(
                               padding: const EdgeInsets.all(20),
@@ -556,9 +595,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           : Column(
                               children: reviews.map((review) {
                                 final userId = review['user_id'];
-                                final userName = userNames[userId] ?? 'Anonymous';
-                                final rating = double.parse(review['review_rating'].toString());
-                                
+                                final userName =
+                                    userNames[userId] ?? 'Anonymous';
+                                final rating = double.parse(
+                                    review['review_rating'].toString());
+
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 20),
                                   padding: const EdgeInsets.all(20),
@@ -567,15 +608,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           CircleAvatar(
-                                            backgroundColor: const Color(0xFF64B5F6).withOpacity(0.2),
+                                            backgroundColor:
+                                                const Color(0xFF64B5F6)
+                                                    .withOpacity(0.2),
                                             radius: 24,
                                             child: Text(
-                                              userName.substring(0, 1).toUpperCase(),
+                                              userName
+                                                  .substring(0, 1)
+                                                  .toUpperCase(),
                                               style: GoogleFonts.sanchez(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
@@ -585,7 +631,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                           ),
                                           const SizedBox(width: 16),
                                           Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 userName,
@@ -606,10 +653,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                           ),
                                           const Spacer(),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 6),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF64B5F6).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(20),
+                                              color: const Color(0xFF64B5F6)
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                             ),
                                             child: Row(
                                               children: [
@@ -623,7 +673,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                                   rating.toString(),
                                                   style: GoogleFonts.sanchez(
                                                     fontWeight: FontWeight.bold,
-                                                    color: const Color(0xFF333333),
+                                                    color:
+                                                        const Color(0xFF333333),
                                                   ),
                                                 ),
                                               ],
@@ -636,11 +687,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                         padding: const EdgeInsets.all(16),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: Colors.grey.shade200),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.grey.shade200),
                                         ),
                                         child: Text(
-                                          review['review_content'] ?? 'No comment',
+                                          review['review_content'] ??
+                                              'No comment',
                                           style: GoogleFonts.sanchez(
                                             color: const Color(0xFF666666),
                                             height: 1.5,
@@ -712,6 +766,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         );
         Navigator.pop(context); // Close dialog
         fetchStock(); // Refresh stock data
+        fetchRemStock();
       } catch (e) {
         print(e);
       }
@@ -747,7 +802,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF64B5F6), width: 2),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF64B5F6), width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -843,4 +899,3 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 }
-

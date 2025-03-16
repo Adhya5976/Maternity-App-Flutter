@@ -35,7 +35,7 @@ class _HomepageState extends State<Homepage> {
   List<Widget> pages = [
     Dashboard(), ManageDistrict(), ManageCategory(), ManagePlace(), 
     ManageSubCategory(), ManageExercise(), ManageDietplan(), 
-    NewShops(), VerifiedShops(), RejectedShop()
+    ManageNewShop(), ManageVerifiedShop(), ManageRejectedShop()
   ];
 
   @override

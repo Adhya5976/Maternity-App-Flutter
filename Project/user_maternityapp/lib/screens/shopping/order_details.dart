@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:user_maternityapp/main.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:user_maternityapp/screens/shopping/post_complaint.dart';
 import 'package:user_maternityapp/screens/shopping/rating.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final int orderId;
+  final int cartId;
 
-  const OrderDetailsPage({super.key, required this.orderId});
+  const OrderDetailsPage({super.key, required this.orderId, required this.cartId});
 
   @override
   _OrderDetailsPageState createState() => _OrderDetailsPageState();
@@ -37,7 +39,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       final itemsResponse = await supabase
           .from('tbl_cart')
           .select('*, tbl_product(*)')
-          .eq('id', widget.orderId).single();
+          .eq('id', widget.cartId
+          ).single();
         Map<String,dynamic> items = {
           "id": itemsResponse['id'],
           "product_id": itemsResponse['product_id'],
@@ -486,16 +489,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   OutlinedButton.icon(
                     onPressed: () {
                       // Implement contact support functionality
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              "Contact support functionality coming soon!"),
-                          backgroundColor: Color(0xFF64B5F6),
-                        ),
-                      );
+                     ComplaintPage(id: orderItems['product_id'],);
                     },
                     icon: Icon(Icons.support_agent),
-                    label: Text("Contact Support"),
+                    label: Text("Post a Complaint"),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Color(0xFF64B5F6),
                       side: BorderSide(color: Color(0xFF64B5F6)),
