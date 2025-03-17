@@ -239,6 +239,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                               width: 70,
                               height: 70,
                               color: Colors.grey[200],
+                              
                               child: Icon(Icons.image_not_supported,
                                   color: Colors.grey),
                             ),
