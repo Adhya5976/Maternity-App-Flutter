@@ -120,7 +120,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             pw.Text("Order Summary", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
               pw.Text("Subtotal"),
-              pw.Text("Rs.${orderItems['price']}"),
+              pw.Text("Rs.${orderItems['price'] * orderItems['quantity']}"),
             ]),
             pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
               pw.Text("Total", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
@@ -297,14 +297,14 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               ),
               child: Column(
                 children: [
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text("Subtotal", style: TextStyle(color: Colors.grey[700])),
-                    Text("Rs.${orderItems['price']}", style: TextStyle(fontWeight: FontWeight.bold)),
-                  ]),
+                  // Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  //   Text("Subtotal", style: TextStyle(color: Colors.grey[700])),
+                  //   Text("Rs.${orderItems['price'] * orderItems['quantity']}", style: TextStyle(fontWeight: FontWeight.bold)),
+                  // ]),
                   Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider()),
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                     Text("Total", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text("Rs.${orderItems['price']}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF64B5F6))),
+                    Text("Rs.${orderItems['price'] * orderItems['quantity']}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF64B5F6))),
                   ]),
                 ],
               ),
