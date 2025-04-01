@@ -442,7 +442,7 @@ class _DashboardHomeTabState extends State<DashboardHomeTab> {
                       return _buildStatCard(
                         title: "Total Sales",
                         value: snapshot.data != null
-                            ? '\$${snapshot.data!.toStringAsFixed(2)}'
+                            ? '\Rs ${snapshot.data!.toStringAsFixed(2)}'
                             : '\$0.00',
                         icon: Icons.attach_money,
                         color: Colors.green,

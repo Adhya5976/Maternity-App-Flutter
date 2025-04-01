@@ -223,7 +223,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Total Sales: \$${totalSales.toStringAsFixed(2)}",
+                    "Total Sales: \Rs ${totalSales.toStringAsFixed(2)}",
                     style: GoogleFonts.sanchez(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -314,7 +314,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                           ),
                           DataCell(
                             Text(
-                              "\$${sale['total_amount'].toStringAsFixed(2)}",
+                              "\Rs ${sale['total_amount'].toStringAsFixed(2)}",
                               style: GoogleFonts.sanchez(
                                 fontSize: 14,
                                 color: Colors.green,
@@ -328,7 +328,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                                 final itemTotal = ((item['price'] as num?)?.toDouble() ?? 0.0) *
                                     (item['quantity'] as num?)!.toDouble();
                                 return Text(
-                                  "${item['product_name']} (x${item['quantity']}) - \$${itemTotal.toStringAsFixed(2)}",
+                                  "${item['product_name']} (x${item['quantity']}) - \Rs ${itemTotal.toStringAsFixed(2)}",
                                   style: GoogleFonts.sanchez(
                                     fontSize: 14,
                                     color: Colors.black87,
