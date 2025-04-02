@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_maternityapp/main.dart';
 import 'package:shop_maternityapp/order_details.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 class BookingManagementPage extends StatefulWidget {
   const BookingManagementPage({super.key});
@@ -12,7 +11,6 @@ class BookingManagementPage extends StatefulWidget {
 }
 
 class _BookingManagementPageState extends State<BookingManagementPage> {
-  DateTime? _selectedDay;
 
   List<Map<String, dynamic>> bookingData = [];
 
@@ -146,28 +144,6 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        SizedBox(width: 5),
-        Text(
-          label,
-          style: GoogleFonts.sanchez(
-            fontSize: 12,
-            color: Colors.grey[700],
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
     Color statusColor;

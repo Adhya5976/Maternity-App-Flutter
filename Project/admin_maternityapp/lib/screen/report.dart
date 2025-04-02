@@ -232,124 +232,129 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   ),
                   const SizedBox(height: 20),
                   SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columnSpacing: 20,
-                      headingRowColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.grey.shade100),
-                      border: TableBorder(
-                        horizontalInside: BorderSide(color: Colors.grey.shade300),
-                        verticalInside: BorderSide(color: Colors.grey.shade300),
-                        top: BorderSide(color: Colors.grey.shade300),
-                        bottom: BorderSide(color: Colors.grey.shade300),
-                        left: BorderSide(color: Colors.grey.shade300),
-                        right: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      columns: [
-                        DataColumn(
-                          label: Text(
-                            "Booking ID",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Date",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Total Amount",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Items",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Shop Name",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ],
-                      rows: salesData.map((sale) {
-                        return DataRow(cells: [
-                          DataCell(
-                            Text(
-                              sale['booking_id'],
-                              style: GoogleFonts.sanchez(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              DateFormat('MMM dd, yyyy').format(sale['date']),
-                              style: GoogleFonts.sanchez(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              "\Rs ${sale['total_amount'].toStringAsFixed(2)}",
-                              style: GoogleFonts.sanchez(
-                                fontSize: 14,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: sale['items'].map<Widget>((item) {
-                                final itemTotal = ((item['price'] as num?)?.toDouble() ?? 0.0) *
-                                    (item['quantity'] as num?)!.toDouble();
-                                return Text(
-                                  "${item['product_name']} (x${item['quantity']}) - \Rs ${itemTotal.toStringAsFixed(2)}",
-                                  style: GoogleFonts.sanchez(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              sale['shop_name'],
-                              style: GoogleFonts.sanchez(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ]);
-                      }).toList(),
-                    ),
+  scrollDirection: Axis.horizontal,
+  child: Container(
+    width: MediaQuery.of(context).size.width,
+    child: DataTable(
+      columnSpacing: 40,
+      headingRowColor: MaterialStateColor.resolveWith(
+          (states) => Colors.grey.shade100),
+      border: TableBorder(
+        horizontalInside: BorderSide(color: Colors.grey.shade300),
+        verticalInside: BorderSide(color: Colors.grey.shade300),
+        top: BorderSide(color: Colors.grey.shade300),
+        bottom: BorderSide(color: Colors.grey.shade300),
+        left: BorderSide(color: Colors.grey.shade300),
+        right: BorderSide(color: Colors.grey.shade300),
+      ),
+      columns: [
+        DataColumn(
+          label: Text(
+            "S.No", // Change "Booking ID" to "S.No" for Serial Number
+            style: GoogleFonts.sanchez(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            "Date",
+            style: GoogleFonts.sanchez(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            "Total Amount",
+            style: GoogleFonts.sanchez(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            "Items",
+            style: GoogleFonts.sanchez(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            "Shop Name",
+            style: GoogleFonts.sanchez(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+      rows: salesData.asMap().entries.map((entry) {
+        int index = entry.key; // Get the index (0-based)
+        var sale = entry.value; // Get the sale data
+        return DataRow(cells: [
+          DataCell(
+            Text(
+              "${index + 1}", // Add 1 to index to start from 1 instead of 0
+              style: GoogleFonts.sanchez(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          DataCell(
+            Text(
+              DateFormat('MMM dd, yyyy').format(sale['date']),
+              style: GoogleFonts.sanchez(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          DataCell(
+            Text(
+              "\Rs ${sale['total_amount'].toStringAsFixed(2)}",
+              style: GoogleFonts.sanchez(
+                fontSize: 14,
+                color: Colors.green,
+              ),
+            ),
+          ),
+          DataCell(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: sale['items'].map<Widget>((item) {
+                final itemTotal = ((item['price'] as num?)?.toDouble() ?? 0.0) *
+                    (item['quantity'] as num?)!.toDouble();
+                return Text(
+                  "${item['product_name']} (x${item['quantity']}) - \Rs ${itemTotal.toStringAsFixed(2)}",
+                  style: GoogleFonts.sanchez(
+                    fontSize: 14,
+                    color: Colors.black87,
                   ),
+                );
+              }).toList(),
+            ),
+          ),
+          DataCell(
+            Text(
+              sale['shop_name'],
+              style: GoogleFonts.sanchez(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ]);
+      }).toList(),
+    ),
+  ),
+),
                 ],
               );
             },

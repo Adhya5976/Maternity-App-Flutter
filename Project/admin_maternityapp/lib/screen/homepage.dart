@@ -1,6 +1,8 @@
+import 'package:admin_maternityapp/main.dart';
 import 'package:admin_maternityapp/screen/category.dart';
 import 'package:admin_maternityapp/screen/dashboard.dart';
 import 'package:admin_maternityapp/screen/district.dart';
+import 'package:admin_maternityapp/screen/login.dart';
 import 'package:admin_maternityapp/screen/manage_dietplan.dart';
 import 'package:admin_maternityapp/screen/manage_exercise.dart';
 import 'package:admin_maternityapp/screen/new_shops.dart';
@@ -49,6 +51,34 @@ class _HomepageState extends State<Homepage> {
           "Admin Dashboard",
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          Padding(
+  padding: const EdgeInsets.all(8.0),
+  child: OutlinedButton.icon(
+    onPressed: () async {
+      await supabase.auth.signOut();
+
+      // Navigate to LoginScreen and remove all previous routes
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Loginpage()),
+        (route) => false, // Removes all previous routes
+      );
+    },
+    label: const Text(
+      "Log out",
+      style: TextStyle(color: Colors.white),
+    ),
+    icon: const Icon(Icons.logout),
+    style: OutlinedButton.styleFrom(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    ),
+  ),
+)
+
+        ],
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

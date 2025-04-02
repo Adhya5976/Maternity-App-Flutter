@@ -72,7 +72,7 @@ class _DashboardState extends State<Dashboard> {
       final response = await supabase
           .from('tbl_booking')
           .select('booking_amount, tbl_cart!inner(cart_qty, product_id, tbl_product!inner(product_price))')
-          .eq('booking_status', 1); // Assuming 1 = Completed
+          .eq('booking_status', 1);
 
       double totalSales = 0.0;
       for (var booking in response) {
@@ -100,13 +100,13 @@ class _DashboardState extends State<Dashboard> {
           .select('created_at, booking_amount, tbl_cart!inner(cart_qty, product_id, tbl_product!inner(product_price))')
           .eq('booking_status', 1)
           .gte('created_at', '2025-01-01')
-          .lte('created_at', '2025-06-30');
+          .lte('created_at', '2025-12-31');
 
-      final monthlySales = List<double>.filled(6, 0.0);
+      final monthlySales = List<double>.filled(12, 0.0);
       for (var booking in response) {
         final createdAt = DateTime.parse(booking['created_at']);
         final monthIndex = createdAt.month - 1;
-        if (monthIndex < 0 || monthIndex > 5) continue;
+        if (monthIndex < 0 || monthIndex > 11) continue;
 
         double saleAmount = 0.0;
         if (booking['booking_amount'] != null) {
@@ -127,10 +127,10 @@ class _DashboardState extends State<Dashboard> {
           : monthlySales;
 
       return List.generate(
-          6, (index) => FlSpot(index.toDouble(), normalizedSales[index]));
+          12, (index) => FlSpot(index.toDouble(), normalizedSales[index]));
     } catch (e) {
       print('Error fetching sales chart data: $e');
-      return List.generate(6, (index) => FlSpot(index.toDouble(), 0.0));
+      return List.generate(12, (index) => FlSpot(index.toDouble(), 0.0));
     }
   }
 
@@ -213,7 +213,7 @@ class _DashboardState extends State<Dashboard> {
           ),
           const SizedBox(height: 20),
           Container(
-            height: 350,
+            height: 400,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -250,7 +250,7 @@ class _DashboardState extends State<Dashboard> {
                         return const Center(child: Text("Error loading chart"));
                       }
                       final spots = snapshot.data ??
-                          List.generate(6, (index) => FlSpot(index.toDouble(), 0.0));
+                          List.generate(12, (index) => FlSpot(index.toDouble(), 0.0));
 
                       return LineChart(
                         LineChartData(
@@ -262,6 +262,7 @@ class _DashboardState extends State<Dashboard> {
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
+                                interval: 1,
                                 getTitlesWidget: (value, meta) {
                                   const titles = [
                                     'Jan',
@@ -269,19 +270,30 @@ class _DashboardState extends State<Dashboard> {
                                     'Mar',
                                     'Apr',
                                     'May',
-                                    'Jun'
+                                    'Jun',
+                                    'Jul',
+                                    'Aug',
+                                    'Sep',
+                                    'Oct',
+                                    'Nov',
+                                    'Dec'
                                   ];
-                                  if (value.toInt() < 0 || value.toInt() >= titles.length) {
+                                  int index = value.toInt();
+                                  if (index < 0 || index >= titles.length) {
                                     return const Text('');
                                   }
-                                  return Text(
-                                    titles[value.toInt()],
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      titles[index],
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   );
                                 },
+                                reservedSize: 30,
                               ),
                             ),
                             rightTitles: const AxisTitles(
@@ -306,6 +318,8 @@ class _DashboardState extends State<Dashboard> {
                               ),
                             ),
                           ],
+                          minX: 0,
+                          maxX: 11,
                         ),
                       );
                     },
