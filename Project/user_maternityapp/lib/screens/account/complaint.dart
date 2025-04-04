@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:user_maternityapp/main.dart';
+import 'package:user_maternityapp/screens/account/mycomplaint.dart';
 
 class Mycomplaint extends StatefulWidget {
   const Mycomplaint({super.key});
@@ -78,6 +79,15 @@ class _MycomplaintState extends State<Mycomplaint> {
           "My Complaints",
           style: TextStyle(color: Colors.white, fontSize: 20),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.warning_amber_outlined),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => POstComplaint(),));
+            },
+            color: Colors.white,
+          ),
+        ],
       ),
       body: answers.isEmpty
           ? const Center(
