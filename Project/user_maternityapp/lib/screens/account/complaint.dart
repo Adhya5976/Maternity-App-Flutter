@@ -79,15 +79,14 @@ class _MycomplaintState extends State<Mycomplaint> {
           "My Complaints",
           style: TextStyle(color: Colors.white, fontSize: 20),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.warning_amber_outlined),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => POstComplaint(),));
-            },
-            color: Colors.white,
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => PostComplaint(),));
+        },
+        label: const Text('Report an Issue'),
+        icon: const Icon(Icons.warning_amber_outlined),
+        backgroundColor: Colors.blue[400],
       ),
       body: answers.isEmpty
           ? const Center(

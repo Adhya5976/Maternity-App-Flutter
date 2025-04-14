@@ -40,7 +40,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       setState(() {
         orderItems = items;
       });
-      print(items);
     } catch (e) {
       print("Error: $e");
     }
@@ -241,9 +240,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
     final blob = html.Blob([pdfBytes], 'application/pdf');
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute('download', 'Order_${widget.bid}_${item['id']}_Bill.pdf')
-      ..click();
 
     html.Url.revokeObjectUrl(url);
 
@@ -260,6 +256,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         return 'Order Packed';
       case 3:
         return 'Order Complete';
+      case 4:
+        return 'Order Cancelled';
       default:
         return 'Unknown';
     }
@@ -458,7 +456,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             ),
             Column(
               children: [
-                item['status'] != 3
+                item['status'] != 3 && item['status'] != 4
                     ? SizedBox(
                         height: 40,
                         width: 120,

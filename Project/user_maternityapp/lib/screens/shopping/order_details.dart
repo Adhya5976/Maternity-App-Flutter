@@ -499,11 +499,34 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       label: Text("Rate Us"),
                     ),
                   SizedBox(height: 12),
-                  orderItems['status'] <2 ? OutlinedButton(
-                    onPressed: () async {
-                      await supabase.from('tbl_cart').update({'cart_status': 4}).eq('id', widget.cartId);
-                      fetchOrderDetails();
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Order Cancelled")));
+                  orderItems['status'] < 2 ? OutlinedButton(
+                    onPressed: () {
+                      // Show confirmation dialog
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Cancel Order"),
+                          content: Text("Are you sure you want to cancel this order? This action cannot be undone."),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text("No"),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                await supabase.from('tbl_cart').update({'cart_status': 4}).eq('id', widget.cartId);
+                                fetchOrderDetails();
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Order Cancelled")));
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              child: Text("Yes, Cancel Order"),
+                            ),
+                          ],
+                        ),
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
@@ -560,6 +583,35 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   }
 
   Widget _buildOrderTimeline(int status) {
+    // If order is cancelled, show a different timeline
+    if (status == 4) {
+      return Column(
+        children: [
+          TimelineTile(
+            alignment: TimelineAlign.start,
+            isFirst: true,
+            indicatorStyle: IndicatorStyle(
+              width: 20,
+              color: Colors.green,
+              iconStyle: IconStyle(color: Colors.white, iconData: Icons.check, fontSize: 12),
+            ),
+            endChild: _buildTimelineChild("Order Placed", "Your order has been placed successfully", true),
+          ),
+          TimelineTile(
+            alignment: TimelineAlign.start,
+            isLast: true,
+            indicatorStyle: IndicatorStyle(
+              width: 20,
+              color: Colors.red,
+              iconStyle: IconStyle(color: Colors.white, iconData: Icons.close, fontSize: 12),
+            ),
+            endChild: _buildTimelineChild("Order Cancelled", "Your order has been cancelled", true),
+          ),
+        ],
+      );
+    }
+
+    // Regular order timeline
     return Column(
       children: [
         TimelineTile(

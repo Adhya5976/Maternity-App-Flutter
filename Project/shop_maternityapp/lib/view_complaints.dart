@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shop_maternityapp/shop_complaints.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ComplaintsPage extends StatefulWidget {
@@ -97,13 +98,32 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Customer Complaints",
-            style: GoogleFonts.sanchez(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Customer Complaints",
+                style: GoogleFonts.sanchez(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ShopComplaintsPage()),
+                  );
+                },
+                icon: Icon(Icons.feedback_outlined),
+                label: Text("Site Feedback"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 198, 176, 249),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Row(

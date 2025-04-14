@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_maternityapp/main.dart';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as path;
 import 'package:shop_maternityapp/product_details.dart'; // Import path package
 
 class ProductManagementPage extends StatefulWidget {
