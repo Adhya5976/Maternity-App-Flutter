@@ -231,16 +231,16 @@ class _ManageDietplanState extends State<ManageDietplan> {
                           child: ListTile(
                             title: Text(plan['dietplan_title'] ?? ''),
                             subtitle: Text(
-                                "Breakfast: ${plan['dietplan_breakfast']}\nLunch: ${plan['dietplan_lunch']}\nDinner: ${plan['dietplan_dinner']}\nTrimester: ${plan['dietplan_month']}"),
+                                "Description: ${plan['dietplan_description']}\nBreakfast: ${plan['dietplan_breakfast']}\nLunch: ${plan['dietplan_lunch']}\nDinner: ${plan['dietplan_dinner']}\nTrimester: ${plan['dietplan_month']}"),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blue),
+                                  icon: Icon(Icons.edit, color: Color.fromARGB(255, 160, 141, 247)),
                                   onPressed: () => showEditDialog(plan),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  icon: const Icon(Icons.delete_outline_rounded, color: Color.fromARGB(255, 160, 141, 247)),
                                   onPressed: () => deleteDietplan(plan['dietplan_id']),
                                 ),
                               ],

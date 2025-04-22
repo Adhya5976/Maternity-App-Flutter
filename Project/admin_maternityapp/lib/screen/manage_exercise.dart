@@ -291,7 +291,11 @@ class _ManageExerciseState extends State<ManageExercise> {
                                 if (exercise['exercise_file'] != null && exercise['exercise_file'].toString().isNotEmpty)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
+                                    child: SizedBox(
+                                    height: 500, 
+                                   width: double.infinity,
                                     child: ExerciseVideoPlayer(url: exercise['exercise_file']),
+                                    ),
                                   ),
                               ],
                             ),
@@ -299,11 +303,11 @@ class _ManageExerciseState extends State<ManageExercise> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blue),
+                                  icon: Icon(Icons.edit, color: Color.fromARGB(255, 160, 141, 247)),
                                   onPressed: () => showEditDialog(exercise),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  icon: const Icon(Icons.delete_outline_rounded, color: Color.fromARGB(255, 160, 141, 247)),
                                   onPressed: () => deleteExercise(exercise['exercise_id']),
                                 ),
                               ],

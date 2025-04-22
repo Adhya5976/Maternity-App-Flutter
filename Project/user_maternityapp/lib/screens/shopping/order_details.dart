@@ -131,6 +131,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
+                    pw.Text("Maternishop", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+  pw.SizedBox(height: 8),
                     pw.Text(shopDetails != null ? "${shopDetails!['shop_name']}" : "Shop Name",
                         style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
                     pw.SizedBox(height: 5),
@@ -163,7 +165,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   pw.Text("BILL TO:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 5),
                   pw.Text(userDetails != null ? "${userDetails!['user_name']}" : "Customer"),
-                  pw.Text(userDetails != null ? "${userDetails!['user_address'] ?? 'Address not available'}" : "Address not available"),
+                  pw.Text("Address: ${userDetails?['user_address'] ?? 'Not available'}"),
                   pw.Text(userDetails != null ? "Phone: ${userDetails!['user_contact'] ?? 'Not available'}" : "Phone: Not available"),
                   pw.Text(userDetails != null ? "Email: ${userDetails!['user_email'] ?? 'Not available'}" : "Email: Not available"),
                 ],

@@ -125,8 +125,8 @@ class _SalesReportPageState extends State<SalesReportPage> {
                     DateFormat('MMM dd, yyyy').format(sale['date']),
                     item['product_name'],
                     '${item['quantity']}',
-                    '\$${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}',
-                    '\$${itemTotal.toStringAsFixed(2)}',
+                    'Rs${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}'
+                    'Rs ${itemTotal.toStringAsFixed(2)}',
                   ];
                 }),
             ],
@@ -281,7 +281,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Total Sales: \$${totalSales.toStringAsFixed(2)}",
+                      "Total Sales: Rs ${totalSales.toStringAsFixed(2)}",
                       style: GoogleFonts.sanchez(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -405,7 +405,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                                 ),
                                 DataCell(
                                   Text(
-                                    "\$${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}",
+                                    "Rs ${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}",
                                     style: GoogleFonts.sanchez(
                                       fontSize: 14,
                                       color: Colors.black87,
@@ -414,7 +414,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                                 ),
                                 DataCell(
                                   Text(
-                                    "\$${itemTotal.toStringAsFixed(2)}",
+                                    "Rs${itemTotal.toStringAsFixed(2)}",
                                     style: GoogleFonts.sanchez(
                                       fontSize: 14,
                                       color: Colors.green,
