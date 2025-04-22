@@ -22,7 +22,22 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
   Future<void> fetchItems() async {
     try {
-      final response = await supabase.from('tbl_cart').select("*,tbl_product(*)").eq('booking_id', widget.bid);
+      // Retrieve the logged-in shop's ID
+      final shopId = supabase.auth.currentUser!.id;
+      if (shopId == null) {
+        throw Exception('Shop ID not found for the logged-in user');
+      }
+
+      // Fetch cart items for the booking, filtered by shop_id
+      final response = await supabase
+          .from('tbl_cart')
+          .select('''
+            id, cart_qty, cart_status, product_id,
+            tbl_product!inner(product_id, product_name, product_image, product_price, shop_id)
+          ''')
+          .eq('booking_id', widget.bid)
+          .eq('tbl_product.shop_id', shopId);
+
       List<Map<String, dynamic>> items = [];
       for (var item in response) {
         int total = item['tbl_product']['product_price'] * item['cart_qty'];
@@ -34,14 +49,20 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           'qty': item['cart_qty'],
           'price': item['tbl_product']['product_price'],
           'total': total,
-          'status': item['cart_status']
+          'status': item['cart_status'],
         });
       }
       setState(() {
         orderItems = items;
       });
     } catch (e) {
-      print("Error: $e");
+      print("Error fetching items: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load order items: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -75,21 +96,32 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     return {
       'name': 'Maternity Care Shop',
       'address': '123 Maternal Avenue, Health District',
-      'city': 'Wellness City',
+      'city': ' Wellness City',
       'state': 'Care State',
       'zip': '54321',
       'phone': '+1 (555) 123-4567',
-      'email': 'shop@maternitycare.com'
+      'email': 'shop@maternitycare.com',
     };
   }
 
   Future<void> update(int id, int status) async {
     try {
       await supabase.from('tbl_cart').update({'cart_status': status + 1}).eq('id', id);
-      fetchItems();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Updated")));
+      await fetchItems();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Status Updated"),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
-      print('Error: $e');
+      print('Error updating status: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update status: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -97,7 +129,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     // Fetch shop and user data
     final data = await supabase
         .from('tbl_product')
-        .select("tbl_shop(shop_name,shop_address,shop_contact)")
+        .select("tbl_shop(shop_name, shop_address, shop_contact)")
         .eq('product_id', item['pid'])
         .single();
     final response = await supabase
@@ -108,16 +140,16 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
     // Extract shop details
     final shop = data['tbl_shop'] ?? {};
-    final shopName = shop['shop_name'] ?? '';
-    final shopAddress = shop['shop_address'] ?? '';
-    final shopContact = shop['shop_contact'] ?? '';
+    final shopName = shop['shop_name'] ?? 'Maternity Care Shop';
+    final shopAddress = shop['shop_address'] ?? '123 Maternal Avenue, Health District';
+    final shopContact = shop['shop_contact'] ?? '+1 (555) 123-4567';
 
     // Extract user details
     final user = response['tbl_booking']?['tbl_user'] ?? {};
-    final userName = user['user_name'] ?? '';
+    final userName = user['user_name'] ?? 'Unknown';
     final userAddress = user['user_address'] ?? '';
-    final userContact = user['user_contact'] ?? '';
-    final userEmail = user['user_email'] ?? '';
+    final userContact = user['user_contact'] ?? 'N/A';
+    final userEmail = user['user_email'] ?? 'N/A';
 
     final pdf = pw.Document();
 
@@ -141,9 +173,18 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text(shopName, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                      pw.Text(shopAddress, style: pw.TextStyle(fontSize: 10)),
-                      pw.Text('Contact: $shopContact', style: pw.TextStyle(fontSize: 10)),
+                      pw.Text(
+                        shopName,
+                        style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.Text(
+                        shopAddress,
+                        style: pw.TextStyle(fontSize: 10),
+                      ),
+                      pw.Text(
+                        'Contact: $shopContact',
+                        style: pw.TextStyle(fontSize: 10),
+                      ),
                     ],
                   ),
                   pw.BarcodeWidget(
@@ -161,21 +202,40 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Order Bill',
-                      style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('Date: ${DateFormat('MMM dd, yyyy').format(DateTime.now())}',
-                      style: pw.TextStyle(fontSize: 12)),
+                  pw.Text(
+                    'Order Bill',
+                    style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text(
+                    'Date: ${DateFormat('MMM dd, yyyy').format(DateTime.now())}',
+                    style: pw.TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
               pw.SizedBox(height: 16),
 
               // User Details
-              pw.Text('Customer Details:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
-              pw.Text('Name: $userName', style: pw.TextStyle(fontSize: 11)),
-              if (userAddress != null && userAddress != 'null' && userAddress.isNotEmpty)
-                pw.Text('Address: $userAddress', style: pw.TextStyle(fontSize: 11)),
-              pw.Text('Contact: $userContact', style: pw.TextStyle(fontSize: 11)),
-              pw.Text('Email: $userEmail', style: pw.TextStyle(fontSize: 11)),
+              pw.Text(
+                'Customer Details:',
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
+              ),
+              pw.Text(
+                'Name: $userName',
+                style: pw.TextStyle(fontSize: 11),
+              ),
+              if (userAddress.isNotEmpty)
+                pw.Text(
+                  'Address: $userAddress',
+                  style: pw.TextStyle(fontSize: 11),
+                ),
+              pw.Text(
+                'Contact: $userContact',
+                style: pw.TextStyle(fontSize: 11),
+              ),
+              pw.Text(
+                'Email: $userEmail',
+                style: pw.TextStyle(fontSize: 11),
+              ),
               pw.SizedBox(height: 12),
 
               // Product Table
@@ -187,19 +247,31 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Product', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          'Product',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Qty', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          'Qty',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Price', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          'Price',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          'Total',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
                       ),
                     ],
                   ),
@@ -228,15 +300,23 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               pw.SizedBox(height: 18),
 
               // Status
-              pw.Text('Order Status: ${_getStatusText(item['status'])}',
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12, color: PdfColor.fromHex('#388e3c'))),
+              pw.Text(
+                'Order Status: ${_getStatusText(item['status'])}',
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 12,
+                  color: PdfColor.fromHex('#388e3c'),
+                ),
+              ),
 
               pw.Spacer(),
               pw.Divider(),
               pw.Align(
                 alignment: pw.Alignment.centerRight,
-                child: pw.Text('Thank you for shopping with us!',
-                    style: pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic)),
+                child: pw.Text(
+                  'Thank you for shopping with us!',
+                  style: pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic),
+                ),
               ),
             ],
           ),
@@ -321,7 +401,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                             ),
                             SizedBox(height: 10),
                             Text(
-                              "No items in this order",
+                              "No items from your shop in this order",
                               style: GoogleFonts.sanchez(
                                 fontSize: 16,
                                 color: Colors.grey[600],
@@ -462,57 +542,55 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             ),
             Column(
               children: [
-                item['status'] != 3 && item['status'] != 4
-                    ? SizedBox(
-                        height: 40,
-                        width: 120,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            update(item['id'], item['status']);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 198, 176, 249),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            btn,
-                            style: GoogleFonts.sanchez(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                if (item['status'] != 3 && item['status'] != 4)
+                  SizedBox(
+                    height: 40,
+                    width: 120,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        update(item['id'], item['status']);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 198, 176, 249),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      )
-                    : Container(),
+                      ),
+                      child: Text(
+                        btn,
+                        style: GoogleFonts.sanchez(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                 SizedBox(height: 10),
-                item['status'] == 3
-                    ? SizedBox(
-                        height: 40,
-                        width: 120,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _downloadBillPdf(item);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            "Download Bill",
-                            style: GoogleFonts.sanchez(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                if (item['status'] == 3)
+                  SizedBox(
+                    height: 40,
+                    width: 120,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _downloadBillPdf(item);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      )
-                    : Container(),
+                      ),
+                      child: Text(
+                        "Download Bill",
+                        style: GoogleFonts.sanchez(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ],

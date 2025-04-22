@@ -11,13 +11,27 @@ class BookingManagementPage extends StatefulWidget {
 }
 
 class _BookingManagementPageState extends State<BookingManagementPage> {
-
   List<Map<String, dynamic>> bookingData = [];
 
   Future<void> fetchBookings() async {
     try {
-      final response =
-          await supabase.from('tbl_booking').select("*, tbl_user(*)").eq('booking_status', 1);
+      final shopId = supabase.auth.currentUser!.id;
+      if (shopId == null) {
+        throw Exception('Shop ID not found for the logged-in user');
+      }
+      final response = await supabase
+    .from('tbl_booking')
+    .select('''
+      id, created_at, booking_amount, booking_status, user_id,
+      tbl_user(user_name, user_contact, user_email),
+      tbl_cart!inner(
+        product_id,
+        tbl_product!inner(shop_id)
+      )
+    ''')
+    .eq('booking_status', 1)
+    .eq('tbl_cart.tbl_product.shop_id', shopId);
+    print(response);
       List<Map<String, dynamic>> items = [];
       for (var row in response) {
         // Parse the created_at timestamp
@@ -30,10 +44,10 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
             "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}";
 
         items.add({
-          'id':row['id'],
+          'id': row['id'],
           'name': row['tbl_user']['user_name'],
-          'date': date, // Add formatted date
-          'time': time, // Add formatted time
+          'date': date,
+          'time': time,
           'contact': row['tbl_user']['user_contact'],
           'email': row['tbl_user']['user_email'],
           'status': row['booking_status'],
@@ -43,13 +57,18 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
         bookingData = items;
       });
     } catch (e) {
-      print(e);
+      print('Error fetching bookings: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load bookings: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     fetchBookings();
   }
@@ -74,68 +93,58 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
             ),
             SizedBox(height: 20),
 
-            // Calendar and Bookings
+            // Bookings List
             Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Bookings List
-                  Expanded(
-                    flex: 3,
-                    child: Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 5,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 20),
-                          Expanded(
-                            child: bookingData.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.event_busy,
-                                          size: 60,
-                                          color: Colors.grey[400],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Text(
-                                          "No bookings found for this day",
-                                          style: GoogleFonts.sanchez(
-                                            fontSize: 16,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: bookingData.length,
-                                    itemBuilder: (context, index) {
-                                      final booking = bookingData[index];
-                                      return _buildBookingCard(booking);
-                                    },
-                                  ),
-                          ),
-                        ],
-                      ),
+              child: Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20),
+                    Expanded(
+                      child: bookingData.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.event_busy,
+                                    size: 60,
+                                    color: Colors.grey[400],
+                                  ),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    "No bookings found for your shop",
+                                    style: GoogleFonts.sanchez(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: bookingData.length,
+                              itemBuilder: (context, index) {
+                                final booking = bookingData[index];
+                                return _buildBookingCard(booking);
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -143,7 +152,6 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
       ),
     );
   }
-
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
     Color statusColor;
@@ -163,7 +171,12 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailsPage(bid: booking['id'],)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OrderDetailsPage(bid: booking['id']),
+          ),
+        );
       },
       child: Card(
         elevation: 0,
@@ -196,21 +209,21 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
                       ],
                     ),
                   ),
-                  // Container(
-                  //   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  //   decoration: BoxDecoration(
-                  //     color: statusColor.withOpacity(0.1),
-                  //     borderRadius: BorderRadius.circular(10),
-                  //   ),
-                  //   child: Text(
-                  //     booking['status'] == 0 ? 'Pending' : 'Confirmed',
-                  //     style: TextStyle(
-                  //       color: statusColor,
-                  //       fontWeight: FontWeight.bold,
-                  //       fontSize: 12,
-                  //     ),
-                  //   ),
-                  // ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      booking['status'] == 1 ? 'Confirmed' : 'Pending',
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 15),
@@ -219,19 +232,15 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
                   Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
                   SizedBox(width: 5),
                   Text(
-                    "${booking['date']}",
+                    "${booking['date']} ${booking['time']}",
                     style: GoogleFonts.sanchez(
                       fontSize: 14,
                       color: Colors.grey[700],
                     ),
                   ),
-                  SizedBox(width: 15),
-                  
-                  
                 ],
               ),
               SizedBox(height: 10),
-              
               Row(
                 children: [
                   Icon(Icons.phone, size: 16, color: Colors.grey[600]),
@@ -255,7 +264,6 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
                   ),
                 ],
               ),
-              
             ],
           ),
         ),

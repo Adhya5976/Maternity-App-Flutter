@@ -90,318 +90,327 @@ class _SalesReportPageState extends State<SalesReportPage> {
     }
   }
 
-  Future<void> _selectEndDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _endDate,
-      firstDate: _startDate,
-      lastDate: DateTime.now(), // Set last date as today
-    );
-    if (picked != null && picked != _endDate) {
-      setState(() {
-        _endDate = picked;
-        _salesDataFuture = fetchSalesData();
-      });
+ Future<void> _selectEndDate(BuildContext context) async {
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: _endDate,
+    firstDate: _startDate, // Restrict to start date to ensure valid range
+    lastDate: DateTime(2025, 12, 31), // Allow selecting up to the end of 2025
+  );
+  if (picked != null && picked != _endDate) {
+    if (picked.isBefore(_startDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('End date cannot be before start date'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+    setState(() {
+      _endDate = picked;
+      _salesDataFuture = fetchSalesData();
+    });
   }
+}
 
   @override
-Widget build(BuildContext context) {
-  return SingleChildScrollView(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Sales Report",
-          style: GoogleFonts.sanchez(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Sales Report",
+            style: GoogleFonts.sanchez(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Start Date",
-                  style: GoogleFonts.sanchez(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 5),
-                GestureDetector(
-                  onTap: () => _selectStartDate(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(_startDate),
-                          style: GoogleFonts.sanchez(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Start Date",
+                    style: GoogleFonts.sanchez(
+                      fontSize: 14,
+                      color: Colors.grey[600],
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "End Date",
-                  style: GoogleFonts.sanchez(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 5),
-                GestureDetector(
-                  onTap: () => _selectEndDate(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(_endDate),
-                          style: GoogleFonts.sanchez(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        FutureBuilder<List<Map<String, dynamic>>>(
-          future: _salesDataFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: Text(
-                  "No sales data available for this period",
-                  style: GoogleFonts.sanchez(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              );
-            }
-
-            final salesData = snapshot.data!;
-            final totalSales = salesData.fold<double>(
-                0.0, (sum, sale) => sum + sale['total_amount']);
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Total Sales: \Rs ${totalSales.toStringAsFixed(2)}",
-                  style: GoogleFonts.sanchez(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 1.5, // Increased width to accommodate new columns
-                    child: DataTable(
-                      columnSpacing: 20,
-                      headingRowColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.grey.shade100),
-                      border: TableBorder(
-                        horizontalInside: BorderSide(color: Colors.grey.shade300),
-                        verticalInside: BorderSide(color: Colors.grey.shade300),
-                        top: BorderSide(color: Colors.grey.shade300),
-                        bottom: BorderSide(color: Colors.grey.shade300),
-                        left: BorderSide(color: Colors.grey.shade300),
-                        right: BorderSide(color: Colors.grey.shade300),
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () => _selectStartDate(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      columns: [
-                        DataColumn(
-                          label: Text(
-                            "S.No",
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(_startDate),
                             style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                               color: Colors.black87,
                             ),
                           ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Date",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Total Amount",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Product Name",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Quantity",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Price",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            "Shop Name",
-                            style: GoogleFonts.sanchez(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ],
-                      rows: salesData.asMap().entries.expand((entry) {
-                        int index = entry.key;
-                        var sale = entry.value;
-                        List<DataRow> rows = [];
-                        for (int i = 0; i < sale['items'].length; i++) {
-                          var item = sale['items'][i];
-                          rows.add(DataRow(cells: [
-                            DataCell(
-                              Text(
-                                i == 0 ? "${index + 1}" : "", // Show S.No only for the first item
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                i == 0
-                                    ? DateFormat('MMM dd, yyyy').format(sale['date'])
-                                    : "", // Show Date only for the first item
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                i == 0
-                                    ? "\Rs ${sale['total_amount'].toStringAsFixed(2)}"
-                                    : "", // Show Total Amount only for the first item
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                item['product_name'],
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                item['quantity'].toString(),
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                "\Rs ${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}",
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                i == 0
-                                    ? sale['shop_name']
-                                    : "", // Show Shop Name only for the first item
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ]));
-                        }
-                        return rows;
-                      }).toList(),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-        ),
-      ],
-    ),
-  );
-}
+                ],
+              ),
+              const SizedBox(width: 20),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "End Date",
+                    style: GoogleFonts.sanchez(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () => _selectEndDate(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(_endDate),
+                            style: GoogleFonts.sanchez(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _salesDataFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(
+                  child: Text(
+                    "No sales data available for this period",
+                    style: GoogleFonts.sanchez(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                );
+              }
+
+              final salesData = snapshot.data!;
+              final totalSales = salesData.fold<double>(
+                  0.0, (sum, sale) => sum + sale['total_amount']);
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Total Sales: \Rs ${totalSales.toStringAsFixed(2)}",
+                    style: GoogleFonts.sanchez(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 1.5, // Increased width to accommodate new columns
+                      child: DataTable(
+                        columnSpacing: 20,
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade100),
+                        border: TableBorder(
+                          horizontalInside: BorderSide(color: Colors.grey.shade300),
+                          verticalInside: BorderSide(color: Colors.grey.shade300),
+                          top: BorderSide(color: Colors.grey.shade300),
+                          bottom: BorderSide(color: Colors.grey.shade300),
+                          left: BorderSide(color: Colors.grey.shade300),
+                          right: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        columns: [
+                          DataColumn(
+                            label: Text(
+                              "S.No",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Date",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Total Amount",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Product Name",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Quantity",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Price",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Shop Name",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ],
+                        rows: salesData.asMap().entries.expand((entry) {
+                          int index = entry.key;
+                          var sale = entry.value;
+                          List<DataRow> rows = [];
+                          for (int i = 0; i < sale['items'].length; i++) {
+                            var item = sale['items'][i];
+                            rows.add(DataRow(cells: [
+                              DataCell(
+                                Text(
+                                  i == 0 ? "${index + 1}" : "", // Show S.No only for the first item
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  i == 0
+                                      ? DateFormat('MMM dd, yyyy').format(sale['date'])
+                                      : "", // Show Date only for the first item
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  i == 0
+                                      ? "\Rs ${sale['total_amount'].toStringAsFixed(2)}"
+                                      : "", // Show Total Amount only for the first item
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 14,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  item['product_name'],
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  item['quantity'].toString(),
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  "\Rs ${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}",
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  i == 0
+                                      ? sale['shop_name']
+                                      : "", // Show Shop Name only for the first item
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            ]));
+                          }
+                          return rows;
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
