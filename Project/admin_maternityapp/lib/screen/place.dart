@@ -207,6 +207,7 @@ class _ManagePlaceState extends State<ManagePlace> {
                             setState(() {
                               eid = data['id'];
                               _placeController.text = data['place_name'];
+                              selectedDistrict = data['district_id'].toString();
                             });
                           },
                           icon: const Icon(Icons.edit, color: Color.fromARGB(255, 160, 141, 247)),

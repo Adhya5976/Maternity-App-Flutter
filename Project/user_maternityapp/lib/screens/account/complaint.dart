@@ -28,10 +28,16 @@ class _MycomplaintState extends State<Mycomplaint> {
       final response = await supabase
           .from('tbl_complaint')
           .select()
-          .eq('user_id', user.id);
-
+          .eq('user_id', user.id)
+          ;
+      List<Map<String, dynamic>> responseList = [];
+      for (var item in response) {
+       if(item['product_id'] != null) {
+          responseList.add(item);
+        }
+      }
       setState(() {
-        answers = List<Map<String, dynamic>>.from(response);
+        answers = List<Map<String, dynamic>>.from(responseList);
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -182,7 +188,7 @@ class _MycomplaintState extends State<Mycomplaint> {
                                     children: [
                                       if (data['complaint_status'] != 0)
                                         Text(
-                                          "Admin Reply:",
+                                          "Shop Reply:",
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
@@ -193,7 +199,7 @@ class _MycomplaintState extends State<Mycomplaint> {
                                         ),
                                       Text(
                                         data['complaint_status'] == 0
-                                            ? "Awaiting Admin Review"
+                                            ? "Awaiting Shop Review"
                                             : data['complaint_reply'] ?? "No Reply",
                                         style: TextStyle(
                                           fontSize: 13,

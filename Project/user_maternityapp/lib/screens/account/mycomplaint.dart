@@ -38,16 +38,18 @@ class _PostComplaintState extends State<PostComplaint> {
           .select()
           .eq('user_id', userId)
           .order('created_at', ascending: false);
-      
+      List<Map<String, dynamic>> responseList = [];
+      for (var item in response) {
+        if (item['product_id'] == null && item['shop_id'] == null) {
+          responseList.add(item);
+        }
+      }
+
       // Use where to filter and toList() to create a new list
-      final filteredComplaints = List<Map<String, dynamic>>.from(response)
-          .where((complaint) => 
-              complaint['product_id'] == null && 
-              complaint['shop_id'] == null)
-          .toList();
+     
       
       setState(() {
-        complaints = filteredComplaints;
+        complaints = responseList;
         isLoading = false;
       });
     } catch (e) {

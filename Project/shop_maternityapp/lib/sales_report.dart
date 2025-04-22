@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'dart:typed_data';
+import 'dart:html' as html;
 
 class SalesReportPage extends StatefulWidget {
   const SalesReportPage({super.key});
@@ -14,7 +18,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
   final SupabaseClient supabase = Supabase.instance.client;
   late Future<List<Map<String, dynamic>>> _salesDataFuture;
   DateTime _startDate = DateTime(2025, 1, 1);
-  DateTime _endDate = DateTime(2025, 6, 30);
+  DateTime _endDate = DateTime.now(); // Always set to today by default
 
   @override
   void initState() {
@@ -74,7 +78,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
       context: context,
       initialDate: _startDate,
       firstDate: DateTime(2020),
-      lastDate: _endDate,
+      lastDate: DateTime.now(), // <-- Only allow up to today
     );
     if (picked != null && picked != _startDate) {
       setState(() {
@@ -89,7 +93,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
       context: context,
       initialDate: _endDate,
       firstDate: _startDate,
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now(), // <-- Only allow up to today
     );
     if (picked != null && picked != _endDate) {
       setState(() {
@@ -97,6 +101,50 @@ class _SalesReportPageState extends State<SalesReportPage> {
         _salesDataFuture = fetchSalesData();
       });
     }
+  }
+
+  Future<void> _generateAndDownloadPdf(List<Map<String, dynamic>> salesData) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        build: (context) => [
+          pw.Text('Sales Report', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 16),
+          pw.Table.fromTextArray(
+            headers: ['Sl. No.', 'Date', 'Product', 'Quantity', 'Price', 'Total Amount'],
+            data: [
+              for (int i = 0; i < salesData.length; i++)
+                ...salesData[i]['items'].asMap().entries.map((entry) {
+                  final item = entry.value;
+                  final sale = salesData[i];
+                  final itemTotal = ((item['price'] as num?)?.toDouble() ?? 0.0) *
+                      (item['quantity'] as num?)!.toDouble();
+                  return [
+                    '${i + 1}',
+                    DateFormat('MMM dd, yyyy').format(sale['date']),
+                    item['product_name'],
+                    '${item['quantity']}',
+                    '\$${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}',
+                    '\$${itemTotal.toStringAsFixed(2)}',
+                  ];
+                }),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    // Save PDF as bytes
+    final Uint8List bytes = await pdf.save();
+
+    // Trigger download in browser
+    final blob = html.Blob([bytes], 'application/pdf');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute('download', 'sales_report.pdf')
+      ..click();
+    html.Url.revokeObjectUrl(url);
   }
 
   @override
@@ -118,6 +166,19 @@ class _SalesReportPageState extends State<SalesReportPage> {
             const SizedBox(height: 20),
             Row(
               children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.download),
+                  label: const Text("Download as PDF"),
+                  onPressed: () async {
+                    final salesData = await _salesDataFuture;
+                    await _generateAndDownloadPdf(salesData);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 20),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -245,7 +306,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                         columns: [
                           DataColumn(
                             label: Text(
-                              "Booking ID",
+                              "Sl. No.",
                               style: GoogleFonts.sanchez(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
@@ -263,7 +324,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                           ),
                           DataColumn(
                             label: Text(
-                              "Total Amount",
+                              "Product",
                               style: GoogleFonts.sanchez(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
@@ -272,7 +333,25 @@ class _SalesReportPageState extends State<SalesReportPage> {
                           ),
                           DataColumn(
                             label: Text(
-                              "Items",
+                              "Quantity",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Price",
+                              style: GoogleFonts.sanchez(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Total Amount",
                               style: GoogleFonts.sanchez(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
@@ -280,53 +359,71 @@ class _SalesReportPageState extends State<SalesReportPage> {
                             ),
                           ),
                         ],
-                        rows: salesData.map((sale) {
-                          return DataRow(cells: [
-                            DataCell(
-                              Text(
-                                sale['booking_id'],
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                DateFormat('MMM dd, yyyy').format(sale['date']),
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Text(
-                                "\$${sale['total_amount'].toStringAsFixed(2)}",
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 14,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: sale['items'].map<Widget>((item) {
-                                  final itemTotal = ((item['price'] as num?)?.toDouble() ?? 0.0) *
-                                      (item['quantity'] as num?)!.toDouble();
-                                  return Text(
-                                    "${item['product_name']} (x${item['quantity']}) - \$${itemTotal.toStringAsFixed(2)}",
+                        rows: [
+                          for (int i = 0; i < salesData.length; i++)
+                            ...salesData[i]['items'].asMap().entries.map((entry) {
+                              final item = entry.value;
+                              final sale = salesData[i];
+                              final itemTotal = ((item['price'] as num?)?.toDouble() ?? 0.0) *
+                                  (item['quantity'] as num?)!.toDouble();
+                              return DataRow(cells: [
+                                DataCell(
+                                  Text(
+                                    '${i + 1}',
                                     style: GoogleFonts.sanchez(
                                       fontSize: 14,
                                       color: Colors.black87,
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ]);
-                        }).toList(),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    DateFormat('MMM dd, yyyy').format(sale['date']),
+                                    style: GoogleFonts.sanchez(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    item['product_name'],
+                                    style: GoogleFonts.sanchez(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    '${item['quantity']}',
+                                    style: GoogleFonts.sanchez(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    "\$${(item['price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0.00'}",
+                                    style: GoogleFonts.sanchez(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    "\$${itemTotal.toStringAsFixed(2)}",
+                                    style: GoogleFonts.sanchez(
+                                      fontSize: 14,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                ),
+                              ]);
+                            }),
+                        ],
                       ),
                     ),
                   ],

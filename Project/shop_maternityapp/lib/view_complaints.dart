@@ -95,172 +95,174 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Customer Complaints",
-                style: GoogleFonts.sanchez(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ShopComplaintsPage()),
-                  );
-                },
-                icon: Icon(Icons.feedback_outlined),
-                label: Text("Site Feedback"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 198, 176, 249),
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: "Search complaints...",
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Customer Complaints",
+                  style: GoogleFonts.sanchez(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
                 ),
-              ),
-              const SizedBox(width: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(10),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ShopComplaintsPage()),
+                    );
+                  },
+                  icon: Icon(Icons.feedback_outlined),
+                  label: Text("Site Feedback"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(255, 198, 176, 249),
+                    foregroundColor: Colors.white,
+                  ),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _statusFilter,
-                    items: ['All', 'New', 'In Progress', 'Resolved']
-                        .map((status) => DropdownMenuItem(
-                              value: status,
-                              child: Text(status),
-                            ))
-                        .toList(),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
                     onChanged: (value) {
                       setState(() {
-                        _statusFilter = value!;
+                        _searchQuery = value;
                       });
                     },
-                    hint: const Text("Status"),
+                    decoration: InputDecoration(
+                      hintText: "Search complaints...",
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _complaintsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return const Center(child: Text("Error loading complaints"));
-              }
-              final complaints = snapshot.data ?? [];
-              final filteredComplaints = _filterComplaints(complaints);
-
-              return Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          title: "Total Complaints",
-                          value: complaints.length.toString(),
-                          icon: Icons.comment,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: _buildStatCard(
-                          title: "New",
-                          value: complaints
-                              .where((c) => c['status'] == 'New')
-                              .length
-                              .toString(),
-                          icon: Icons.fiber_new,
-                          color: Colors.red,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: _buildStatCard(
-                          title: "Resolved",
-                          value: complaints
-                              .where((c) => c['status'] == 'Resolved')
-                              .length
-                              .toString(),
-                          icon: Icons.check_circle,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 20),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(height: 20),
-                  filteredComplaints.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.inbox,
-                                size: 60,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                "No complaints found",
-                                style: GoogleFonts.sanchez(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _statusFilter,
+                      items: ['All', 'New', 'In Progress', 'Resolved']
+                          .map((status) => DropdownMenuItem(
+                                value: status,
+                                child: Text(status),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _statusFilter = value!;
+                        });
+                      },
+                      hint: const Text("Status"),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: _complaintsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(child: Text("Error loading complaints"));
+                }
+                final complaints = snapshot.data ?? [];
+                final filteredComplaints = _filterComplaints(complaints);
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            title: "Total Complaints",
+                            value: complaints.length.toString(),
+                            icon: Icons.comment,
+                            color: Colors.blue,
                           ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filteredComplaints.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 15),
-                          itemBuilder: (context, index) {
-                            final complaint = filteredComplaints[index];
-                            return _buildComplaintCard(complaint);
-                          },
                         ),
-                ],
-              );
-            },
-          ),
-        ],
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: _buildStatCard(
+                            title: "New",
+                            value: complaints
+                                .where((c) => c['status'] == 'New')
+                                .length
+                                .toString(),
+                            icon: Icons.fiber_new,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: _buildStatCard(
+                            title: "Resolved",
+                            value: complaints
+                                .where((c) => c['status'] == 'Resolved')
+                                .length
+                                .toString(),
+                            icon: Icons.check_circle,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    filteredComplaints.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.inbox,
+                                  size: 60,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  "No complaints found",
+                                  style: GoogleFonts.sanchez(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filteredComplaints.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 15),
+                            itemBuilder: (context, index) {
+                              final complaint = filteredComplaints[index];
+                              return _buildComplaintCard(complaint);
+                            },
+                          ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

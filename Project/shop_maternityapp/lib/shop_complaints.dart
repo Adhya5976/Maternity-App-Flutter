@@ -110,6 +110,7 @@ class _ShopComplaintsPageState extends State<ShopComplaintsPage> {
                   ),
                 )
               : ListView.builder(
+                  physics: NeverScrollableScrollPhysics(),
                   padding: EdgeInsets.all(16),
                   itemCount: complaints.length,
                   itemBuilder: (context, index) {

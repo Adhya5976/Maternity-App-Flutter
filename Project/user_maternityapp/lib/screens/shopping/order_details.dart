@@ -164,7 +164,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   pw.SizedBox(height: 5),
                   pw.Text(userDetails != null ? "${userDetails!['user_name']}" : "Customer"),
                   pw.Text(userDetails != null ? "${userDetails!['user_address'] ?? 'Address not available'}" : "Address not available"),
-                  pw.Text(userDetails != null ? "Phone: ${userDetails!['user_phone'] ?? 'Not available'}" : "Phone: Not available"),
+                  pw.Text(userDetails != null ? "Phone: ${userDetails!['user_contact'] ?? 'Not available'}" : "Phone: Not available"),
                   pw.Text(userDetails != null ? "Email: ${userDetails!['user_email'] ?? 'Not available'}" : "Email: Not available"),
                 ],
               ),

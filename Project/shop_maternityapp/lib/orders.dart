@@ -196,21 +196,21 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      booking['status'] == 0 ? 'Pending' : 'Confirmed',
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
+                  // Container(
+                  //   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  //   decoration: BoxDecoration(
+                  //     color: statusColor.withOpacity(0.1),
+                  //     borderRadius: BorderRadius.circular(10),
+                  //   ),
+                  //   child: Text(
+                  //     booking['status'] == 0 ? 'Pending' : 'Confirmed',
+                  //     style: TextStyle(
+                  //       color: statusColor,
+                  //       fontWeight: FontWeight.bold,
+                  //       fontSize: 12,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
               SizedBox(height: 15),
@@ -226,15 +226,8 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
                     ),
                   ),
                   SizedBox(width: 15),
-                  Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                  SizedBox(width: 5),
-                  Text(
-                    "${booking['time']}",
-                    style: GoogleFonts.sanchez(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                    ),
-                  ),
+                  
+                  
                 ],
               ),
               SizedBox(height: 10),
