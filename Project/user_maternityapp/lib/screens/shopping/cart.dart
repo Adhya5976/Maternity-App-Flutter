@@ -44,7 +44,7 @@ int? bookingAmt;
       'name': 'Maternity App',
       'description': 'Payment',
       'prefill': {
-        'contact': '8289900958',
+        'contact': '8606540112',
         'email': 'test@razorpay.com',
       },
       'theme': {'color': '#00245E'}
